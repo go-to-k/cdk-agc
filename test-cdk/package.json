@@ -1,0 +1,24 @@
+{
+  "name": "test-cdk",
+  "version": "1.0.0",
+  "description": "Test CDK project for cdk-agc",
+  "type": "module",
+  "scripts": {
+    "synth": "cdk synth",
+    "test": "node --experimental-transform-types --enable-source-maps scripts/test-all.ts",
+    "test:basic": "node --experimental-transform-types --enable-source-maps scripts/test-basic.ts",
+    "test:multiple": "node --experimental-transform-types --enable-source-maps scripts/test-multiple.ts",
+    "test:keep-hours": "node --experimental-transform-types --enable-source-maps scripts/test-keep-hours.ts",
+    "test:all": "node --experimental-transform-types --enable-source-maps scripts/test-all.ts"
+  },
+  "license": "Apache-2.0",
+  "dependencies": {
+    "aws-cdk-lib": "^2.237.1",
+    "constructs": "^10.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5",
+    "aws-cdk": "^2.1105.0",
+    "typescript": "^5.7.3"
+  }
+}

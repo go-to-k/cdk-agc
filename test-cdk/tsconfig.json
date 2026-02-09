@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ESNext"],
+    "strict": true,
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true
+  },
+  "include": ["app.ts", "scripts/**/*.ts"]
+}
