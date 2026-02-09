@@ -237,27 +237,33 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
   const itemsToDelete: Array<{ path: string; size: number }> = [];
   const referencedAssets: Array<{ path: string; stacks: string[] }> = [];
   const timeProtectedAssets: string[] = [];
-  let protectedCount = 0;
+  const metadataFiles: string[] = [];
+  const stackTemplates: string[] = [];
 
   await Promise.all(
     entries.map(async (entry) => {
       const itemPath = path.join(outdir, entry);
 
       if (await isProtected(itemPath, outdir, activePaths, keepHours)) {
-        protectedCount++;
         const stacks = assetToStacksMap.get(itemPath);
 
-        // Check if this is an asset protected by stack reference
+        // Categorize protected items
         if (stacks && stacks.size > 0 && entry.startsWith("asset.")) {
+          // Asset protected by stack reference
           referencedAssets.push({ path: entry, stacks: Array.from(stacks).sort() });
-        }
-        // Check if this is protected by keepHours but not referenced
-        else if (keepHours > 0 && entry.startsWith("asset.")) {
+        } else if (keepHours > 0 && entry.startsWith("asset.")) {
+          // Asset protected by keepHours but not referenced
           const stats = await fs.stat(itemPath);
           const ageHours = (Date.now() - stats.mtimeMs) / (1000 * 60 * 60);
           if (ageHours <= keepHours) {
             timeProtectedAssets.push(entry);
           }
+        } else if (entry.endsWith(".template.json")) {
+          // Stack templates
+          stackTemplates.push(entry);
+        } else if (PROTECTED_FILES.has(entry) || entry.endsWith(".assets.json")) {
+          // Metadata files
+          metadataFiles.push(entry);
         }
         return;
       }
@@ -269,20 +275,42 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
 
   // Display results
   if (itemsToDelete.length === 0) {
-    console.log(`✓ No unused assets found. ${protectedCount} item(s) are protected.`);
+    const totalProtected =
+      referencedAssets.length +
+      timeProtectedAssets.length +
+      metadataFiles.length +
+      stackTemplates.length;
+    console.log(`✓ No unused assets found. ${totalProtected} item(s) are protected.\n`);
+
+    if (metadataFiles.length > 0) {
+      console.log(`Metadata files (${metadataFiles.length}):`);
+      for (const file of metadataFiles.sort()) {
+        console.log(`  - ${file}`);
+      }
+      console.log("");
+    }
+
+    if (stackTemplates.length > 0) {
+      console.log(`Stack templates (${stackTemplates.length}):`);
+      for (const file of stackTemplates.sort()) {
+        console.log(`  - ${file}`);
+      }
+      console.log("");
+    }
 
     if (referencedAssets.length > 0) {
-      console.log(`\nAssets referenced in stacks:`);
+      console.log(`Assets referenced in stacks (${referencedAssets.length}):`);
       for (const asset of referencedAssets) {
         const stacksText =
           asset.stacks.length === 1 ? asset.stacks[0] : asset.stacks.join(", ");
         console.log(`  - ${asset.path} (used in ${stacksText})`);
       }
+      console.log("");
     }
 
     if (timeProtectedAssets.length > 0) {
-      console.log(`\nAssets protected by --keep-hours ${keepHours}:`);
-      for (const asset of timeProtectedAssets) {
+      console.log(`Assets protected by --keep-hours ${keepHours} (${timeProtectedAssets.length}):`);
+      for (const asset of timeProtectedAssets.sort()) {
         console.log(`  - ${asset}`);
       }
     }
