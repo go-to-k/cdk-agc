@@ -101,7 +101,7 @@ npx cdk-agc -k 24
 `asset.*` files/directories are **protected** from deletion if they meet **any** of these criteria:
 
 1. **Active References**: Referenced in `manifest.json` or `*.assets.json` files
-2. **Recent Modifications**: Modified within the last N hours (when using `--keep-hours`)
+2. **Recent Modifications**: Modified within the last N hours (when using `-k/--keep-hours`)
 
 ## Use Cases
 
@@ -150,10 +150,10 @@ All file operations use `Promise.all()` for concurrent execution and optimal per
 
 ## Safety
 
-- **Non-destructive by default**: Use `-d` to preview before actual deletion
+- **Non-destructive by default**: Use `-d/--dry-run` to preview before actual deletion
 - **Conservative protection**: Keeps all CDK metadata files
 - **Incremental-build friendly**: Won't trigger unnecessary rebuilds
-- **Rollback support**: Use `--keep-hours` to maintain recent history
+- **Rollback support**: Use `-k/--keep-hours` to maintain recent history
 
 ## Requirements
 
