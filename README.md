@@ -28,11 +28,6 @@ This helps optimize storage and streamline CI/CD caching.
 - **Manifest-based protection**: Only removes assets not referenced by the current configuration
 - **Time-based protection**: Keeps recent assets for quick rollbacks
 
-### Background
-
-- [GitHub Issue #786](https://github.com/aws/aws-cdk-cli/issues/786): 5+ year old unresolved request
-- [AWS CDK gc (2025)](https://www.infoq.com/jp/news/2025/03/aws-cdk-garbage-collection/): Cloud-only, doesn't address local cleanup
-
 ## Installation
 
 ```bash
