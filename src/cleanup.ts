@@ -237,8 +237,8 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
   const itemsToDelete: Array<{ path: string; size: number }> = [];
   const referencedAssets: Array<{ path: string; stacks: string[] }> = [];
   const timeProtectedAssets: string[] = [];
-  const metadataFiles: string[] = [];
-  const stackTemplates: string[] = [];
+  const stackFiles: Map<string, { template?: string; assets?: string }> = new Map();
+  const globalMetadataFiles: string[] = [];
 
   await Promise.all(
     entries.map(async (entry) => {
@@ -259,11 +259,22 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
             timeProtectedAssets.push(entry);
           }
         } else if (entry.endsWith(".template.json")) {
-          // Stack templates
-          stackTemplates.push(entry);
-        } else if (PROTECTED_FILES.has(entry) || entry.endsWith(".assets.json")) {
-          // Metadata files
-          metadataFiles.push(entry);
+          // Stack template
+          const stackName = entry.replace(".template.json", "");
+          if (!stackFiles.has(stackName)) {
+            stackFiles.set(stackName, {});
+          }
+          stackFiles.get(stackName)!.template = entry;
+        } else if (entry.endsWith(".assets.json")) {
+          // Stack assets metadata
+          const stackName = entry.replace(".assets.json", "");
+          if (!stackFiles.has(stackName)) {
+            stackFiles.set(stackName, {});
+          }
+          stackFiles.get(stackName)!.assets = entry;
+        } else if (PROTECTED_FILES.has(entry)) {
+          // Global metadata files
+          globalMetadataFiles.push(entry);
         }
         return;
       }
@@ -275,25 +286,31 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
 
   // Display results
   if (itemsToDelete.length === 0) {
+    const totalStacks = stackFiles.size;
     const totalProtected =
-      referencedAssets.length +
-      timeProtectedAssets.length +
-      metadataFiles.length +
-      stackTemplates.length;
+      referencedAssets.length + timeProtectedAssets.length + globalMetadataFiles.length + totalStacks * 2;
     console.log(`✓ No unused assets found. ${totalProtected} item(s) are protected.\n`);
 
-    if (metadataFiles.length > 0) {
-      console.log(`Metadata files (${metadataFiles.length}):`);
-      for (const file of metadataFiles.sort()) {
+    if (globalMetadataFiles.length > 0) {
+      console.log(`Global metadata files (${globalMetadataFiles.length}):`);
+      for (const file of globalMetadataFiles.sort()) {
         console.log(`  - ${file}`);
       }
       console.log("");
     }
 
-    if (stackTemplates.length > 0) {
-      console.log(`Stack templates (${stackTemplates.length}):`);
-      for (const file of stackTemplates.sort()) {
-        console.log(`  - ${file}`);
+    if (stackFiles.size > 0) {
+      console.log(`Stacks (${stackFiles.size}):`);
+      const sortedStacks = Array.from(stackFiles.keys()).sort();
+      for (const stackName of sortedStacks) {
+        const files = stackFiles.get(stackName)!;
+        console.log(`  ${stackName}:`);
+        if (files.template) {
+          console.log(`    - ${files.template}`);
+        }
+        if (files.assets) {
+          console.log(`    - ${files.assets}`);
+        }
       }
       console.log("");
     }
