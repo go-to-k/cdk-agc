@@ -35,7 +35,7 @@ n 24
 
 ```bash
 # Clone the repository
-git clone https://github.com/goto/cdk-agc.git
+git clone https://github.com/go-to-k/cdk-agc.git
 cd cdk-agc
 
 # Install dependencies (workspace includes test-cdk)
@@ -313,7 +313,7 @@ npx semantic-release --no-ci
 
 ## Questions & Support
 
-- **Issues**: [GitHub Issues](https://github.com/goto/cdk-agc/issues)
+- **Issues**: [GitHub Issues](https://github.com/go-to-k/cdk-agc/issues)
 
 ## License
 
