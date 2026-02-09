@@ -286,31 +286,6 @@ npx semantic-release --no-ci
 - Publishes to npm with provenance
 - Creates GitHub Release with auto-generated notes
 
-## Project Structure
-
-```
-cdk-agc/
-├── src/
-│   ├── cli.ts           # CLI entry point
-│   ├── cleanup.ts       # Core functionality
-│   └── cleanup.test.ts  # Unit tests
-├── test-cdk/            # Integration tests (CDK project)
-│   ├── app.ts           # CDK app for testing
-│   ├── scripts/         # Test scripts
-│   └── lambda/          # Lambda code for asset generation
-├── dist/                # Build artifacts (tsdown output)
-├── .github/workflows/   # CI/CD
-│   ├── ci.yml           # Lint, test, build
-│   ├── release.yml      # Automated releases
-│   └── pr-title-check.yml  # PR title validation
-├── .vscode/             # VSCode settings (Oxc integration)
-├── .tool-versions       # Node.js version (mise/asdf)
-├── .releaserc.json      # semantic-release config
-├── pnpm-workspace.yaml  # pnpm workspace config
-├── tsdown.config.ts     # Build configuration
-└── package.json
-```
-
 ## Tools & Libraries
 
 ### Core Development
