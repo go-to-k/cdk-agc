@@ -110,16 +110,47 @@ Then create a pull request on GitHub.
 
 ## Pull Request Guidelines
 
+### PR Title Format (Required)
+
+**Your PR title MUST follow Conventional Commits format, or CI will fail.**
+
+Format: `<type>(<scope>): <description>`
+
+**Allowed types:**
+- `feat`: New feature → Minor version bump
+- `fix`: Bug fix → Patch version bump
+- `docs`: Documentation only
+- `style`: Code style changes (formatting, missing semi-colons, etc.)
+- `refactor`: Code refactoring
+- `perf`: Performance improvements
+- `test`: Adding or updating tests
+- `build`: Build system changes
+- `ci`: CI configuration changes
+- `chore`: Other changes (dependencies, tooling, etc.)
+- `revert`: Revert a previous commit
+
+**Scope** (optional): Component or area affected (e.g., `api`, `cli`, `parser`)
+
+**Breaking changes:** Add `!` after type (e.g., `feat!:`) or include `BREAKING CHANGE:` in description
+
+**Examples:**
+- ✅ `feat: add support for custom manifest paths`
+- ✅ `fix: correctly handle nested asset directories`
+- ✅ `feat(cli): add --verbose flag`
+- ✅ `feat!: remove deprecated --force option`
+- ❌ `Add new feature` (missing type)
+- ❌ `feature: add something` (invalid type)
+
 ### Checklist
 
 Before creating a pull request, ensure:
 
+- [ ] PR title follows Conventional Commits format
 - [ ] Code is formatted (`pnpm run format`)
 - [ ] No lint errors (`pnpm run lint`)
 - [ ] All tests pass (`pnpm test`)
 - [ ] New features include appropriate tests
 - [ ] Documentation is updated (if needed)
-- [ ] PR title follows Conventional Commits format (e.g., `feat:`, `fix:`)
 
 ### Writing Tests
 
