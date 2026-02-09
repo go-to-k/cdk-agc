@@ -261,7 +261,6 @@ cdk-agc/
 ## Questions & Support
 
 - **Issues**: [GitHub Issues](https://github.com/goto/cdk-agc/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/goto/cdk-agc/discussions)
 
 ## License
 
