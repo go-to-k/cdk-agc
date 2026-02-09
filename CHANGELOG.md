@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/go-to-k/cdk-agc/compare/v1.0.1...v1.0.2) (2026-02-09)
+
+
+### Bug Fixes
+
+* cannot protect assets for Stage ([#4](https://github.com/go-to-k/cdk-agc/issues/4)) ([72646be](https://github.com/go-to-k/cdk-agc/commit/72646bed9cc68d2436df7f6de33ea2fc6cbdb127))
+
 ## [1.0.1](https://github.com/go-to-k/cdk-agc/compare/v1.0.0...v1.0.1) (2026-02-09)
 
 
