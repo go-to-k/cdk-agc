@@ -1,0 +1,70 @@
+{
+  "name": "cdk-agc",
+  "version": "0.1.0",
+  "description": "CDK Assembly Garbage Collector - Clean up unused assets in cdk.out",
+  "type": "module",
+  "bin": {
+    "cdk-agc": "dist/cli.mjs"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/goto/cdk-agc.git"
+  },
+  "bugs": {
+    "url": "https://github.com/goto/cdk-agc/issues"
+  },
+  "homepage": "https://github.com/goto/cdk-agc#readme",
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "lint": "oxlint src",
+    "format": "oxfmt src",
+    "format:check": "oxfmt --check src",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:integ": "pnpm build && pnpm --filter test-cdk test",
+    "test:integ:basic": "pnpm build && pnpm --filter test-cdk test:basic",
+    "test:integ:multiple": "pnpm build && pnpm --filter test-cdk test:multiple",
+    "test:integ:keep-hours": "pnpm build && pnpm --filter test-cdk test:keep-hours",
+    "semantic-release": "semantic-release",
+    "prepublishOnly": "pnpm run build"
+  },
+  "keywords": [
+    "aws-cdk",
+    "cdk",
+    "garbage-collector",
+    "cleanup",
+    "assets",
+    "assembly",
+    "cloud-assembly",
+    "storage-optimization",
+    "cli"
+  ],
+  "author": "goto",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "commander": "^12.1.0"
+  },
+  "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^12.0.5",
+    "@types/node": "^22.10.5",
+    "@vitest/coverage-v8": "^4.0.18",
+    "oxfmt": "^0.28.0",
+    "oxlint": "^1.43.0",
+    "semantic-release": "^25.0.3",
+    "tsdown": "^0.20.3",
+    "typescript": "^5.7.3",
+    "vitest": "^4.0.18"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

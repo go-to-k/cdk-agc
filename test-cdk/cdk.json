@@ -1,0 +1,3 @@
+{
+  "app": "node --enable-source-maps app.ts"
+}
