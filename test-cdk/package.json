@@ -5,11 +5,11 @@
   "type": "module",
   "scripts": {
     "synth": "cdk synth",
-    "test": "node --experimental-transform-types --enable-source-maps scripts/test-all.ts",
-    "test:basic": "node --experimental-transform-types --enable-source-maps scripts/test-basic.ts",
-    "test:multiple": "node --experimental-transform-types --enable-source-maps scripts/test-multiple.ts",
-    "test:keep-hours": "node --experimental-transform-types --enable-source-maps scripts/test-keep-hours.ts",
-    "test:all": "node --experimental-transform-types --enable-source-maps scripts/test-all.ts"
+    "test": "node --enable-source-maps scripts/test-all.ts",
+    "test:basic": "node --enable-source-maps scripts/test-basic.ts",
+    "test:multiple": "node --enable-source-maps scripts/test-multiple.ts",
+    "test:keep-hours": "node --enable-source-maps scripts/test-keep-hours.ts",
+    "test:all": "node --enable-source-maps scripts/test-all.ts"
   },
   "license": "Apache-2.0",
   "dependencies": {

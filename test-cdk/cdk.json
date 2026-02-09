@@ -1,3 +1,3 @@
 {
-  "app": "node --experimental-transform-types --enable-source-maps app.ts"
+  "app": "node --enable-source-maps app.ts"
 }

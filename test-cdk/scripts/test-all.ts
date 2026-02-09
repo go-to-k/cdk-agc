@@ -24,7 +24,7 @@ for (const test of tests) {
   try {
     console.log(`\n🧪 Running: ${test.name}`);
     console.log('─'.repeat(60));
-    execSync(`node --experimental-transform-types --enable-source-maps ${path.join(scriptsDir, test.script)}`, {
+    execSync(`node --enable-source-maps ${path.join(scriptsDir, test.script)}`, {
       stdio: 'inherit',
     });
     passed++;
