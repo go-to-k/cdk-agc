@@ -391,4 +391,40 @@ describe("cleanupAssets", () => {
     // Asset exactly at 3 hours boundary should be protected (<=)
     expect(await fileExists("asset.boundary")).toBe(true);
   });
+
+  it("should protect assets referenced in nested assembly directories", async () => {
+    await createTestManifest();
+
+    // Create nested assembly directory (e.g., Stages)
+    const nestedAssetsJson = {
+      version: "1.0.0",
+      files: {
+        nestedAsset: {
+          source: {
+            path: "../asset.nested123",
+            packaging: "zip",
+          },
+          destinations: {},
+        },
+      },
+    };
+
+    await createTestFile("assembly-MyStage/manifest.json", JSON.stringify({ version: "1.0.0" }));
+    await createTestFile(
+      "assembly-MyStage/Stack.assets.json",
+      JSON.stringify(nestedAssetsJson, null, 2),
+    );
+
+    // Create assets
+    await createTestFile("asset.nested123/index.js", "console.log('nested')");
+    await createTestFile("asset.unused/old.txt", "delete me");
+
+    await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 });
+
+    // Asset referenced in nested assembly should be protected
+    expect(await fileExists("asset.nested123/index.js")).toBe(true);
+
+    // Unreferenced asset should be deleted
+    expect(await fileExists("asset.unused")).toBe(false);
+  });
 });
