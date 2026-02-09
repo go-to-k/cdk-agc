@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [20, 22]
+        node-version: [20, 22, 24]
 
     steps:
       - uses: actions/checkout@v4
@@ -42,10 +42,11 @@ jobs:
         run: pnpm run test
 
       - name: Integration Test
+        if: matrix.node-version == 24
         run: pnpm --filter test-cdk test
 
       - name: Upload coverage
-        if: matrix.node-version == 22
+        if: matrix.node-version == 24
         uses: codecov/codecov-action@v5
         with:
           files: ./coverage/coverage-final.json
