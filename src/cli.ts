@@ -1,13 +1,17 @@
 #!/usr/bin/env node
 import { Command } from "commander";
+import { createRequire } from "module";
 import { cleanupAssets } from "./cleanup.js";
+
+const require = createRequire(import.meta.url);
+const pkg = require("../package.json");
 
 const program = new Command();
 
 program
   .name("cdk-agc")
   .description("CDK Assembly Garbage Collector - Clean up unused assets in cdk.out")
-  .version("0.1.0")
+  .version(pkg.version)
   .option("-o, --outdir <path>", "CDK output directory", "cdk.out")
   .option("-d, --dry-run", "Show what would be deleted without actually deleting", false)
   .option("-k, --keep-hours <number>", "Protect files modified within this many hours", "0")
