@@ -59,7 +59,7 @@ npx cdk-agc -k 24
 ### Options
 
 | Option | Description | Default |
-|--------|-------------|---------|
+| -------- | ------------- | --------- |
 | `-o, --outdir <path>` | CDK output directory to clean | `cdk.out` |
 | `-d, --dry-run` | Show what would be deleted without deleting | `false` |
 | `-k, --keep-hours <number>` | Protect files modified within N hours | `0` |
