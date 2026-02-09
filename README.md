@@ -86,7 +86,6 @@ npx cdk-agc -k 24
 
 - `manifest.json`
 - `tree.json`
-- `cdk.context.json`
 - `cdk.out`
 - `*.template.json`
 - `*.assets.json`

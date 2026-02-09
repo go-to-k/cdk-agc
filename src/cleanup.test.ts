@@ -59,7 +59,6 @@ describe("cleanupAssets", () => {
   it("should protect essential metadata files", async () => {
     await createTestManifest();
     await createTestFile("tree.json", "{}");
-    await createTestFile("cdk.context.json", "{}");
     await createTestFile("cdk.out", "");
     await createTestFile("Stack.assets.json", "{}");
     await createTestFile("asset.unused/file.txt", "delete me");
@@ -68,7 +67,6 @@ describe("cleanupAssets", () => {
 
     expect(await fileExists("manifest.json")).toBe(true);
     expect(await fileExists("tree.json")).toBe(true);
-    expect(await fileExists("cdk.context.json")).toBe(true);
     expect(await fileExists("cdk.out")).toBe(true);
     expect(await fileExists("Stack.assets.json")).toBe(true);
     expect(await fileExists("asset.unused")).toBe(false);
