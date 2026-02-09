@@ -185,4 +185,70 @@ describe("cleanupAssets", () => {
     // Unreferenced asset should be deleted
     expect(await fileExists("asset.unused")).toBe(false);
   });
+
+  it("should protect assets used by multiple stacks", async () => {
+    await createTestManifest();
+
+    // Create two stacks that share the same asset
+    const stack1AssetsJson = {
+      version: "1.0.0",
+      files: {
+        "shared123": {
+          source: {
+            path: "asset.shared123",
+            packaging: "zip",
+          },
+          destinations: {},
+        },
+        "stack1only": {
+          source: {
+            path: "asset.stack1only",
+            packaging: "file",
+          },
+          destinations: {},
+        },
+      },
+    };
+
+    const stack2AssetsJson = {
+      version: "1.0.0",
+      files: {
+        "shared123": {
+          source: {
+            path: "asset.shared123",
+            packaging: "zip",
+          },
+          destinations: {},
+        },
+        "stack2only": {
+          source: {
+            path: "asset.stack2only",
+            packaging: "file",
+          },
+          destinations: {},
+        },
+      },
+    };
+
+    await createTestFile("Stack1.assets.json", JSON.stringify(stack1AssetsJson, null, 2));
+    await createTestFile("Stack2.assets.json", JSON.stringify(stack2AssetsJson, null, 2));
+
+    // Create asset directories
+    await createTestFile("asset.shared123/index.js", "console.log('shared')");
+    await createTestFile("asset.stack1only/data1.json", '{"stack":1}');
+    await createTestFile("asset.stack2only/data2.json", '{"stack":2}');
+    await createTestFile("asset.unused/old.txt", "delete me");
+
+    await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 });
+
+    // Shared asset should be protected
+    expect(await fileExists("asset.shared123/index.js")).toBe(true);
+
+    // Stack-specific assets should be protected
+    expect(await fileExists("asset.stack1only/data1.json")).toBe(true);
+    expect(await fileExists("asset.stack2only/data2.json")).toBe(true);
+
+    // Unreferenced asset should be deleted
+    expect(await fileExists("asset.unused")).toBe(false);
+  });
 });
