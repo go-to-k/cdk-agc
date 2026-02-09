@@ -120,7 +120,7 @@ npx cdk-agc -k 1  # Keep last hour's assets for quick rollback
   uses: actions/cache@v3
   with:
     path: cdk.out
-    key: cdk-${{ hashFiles('**/cdk.json') }}
+    key: cdk-${{ github.sha }}
 ```
 
 ### Monorepo
