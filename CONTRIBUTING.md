@@ -80,47 +80,27 @@ node dist/cli.js --help
 node dist/cli.js -d
 ```
 
-### 6. Create a Changeset
-
-Create a changeset to document your changes:
-
-```bash
-pnpm changeset
-```
-
-Follow the interactive prompts:
-- **Version type**:
-  - `patch`: Bug fixes
-  - `minor`: New features (backward compatible)
-  - `major`: Breaking changes
-- **Summary**: Description of changes for end-users (in English)
-
-Example:
-```
----
-"cdk-agc": patch
----
-
-Fix: Correctly handle nested asset directories in manifest parsing
-```
-
-### 7. Commit
+### 6. Commit
 
 ```bash
 git add .
 git commit -m "feat: add support for custom manifest paths"
 ```
 
-**Commit Message Convention:**
-- `feat:` New feature
-- `fix:` Bug fix
-- `docs:` Documentation changes only
-- `style:` Code style changes (formatting, etc.)
-- `refactor:` Code refactoring
-- `test:` Adding or updating tests
-- `chore:` Build process or tooling changes
+**Commit Message Convention (Conventional Commits):**
+- `feat:` New feature → **Minor version bump** (0.1.0 → 0.2.0)
+- `fix:` Bug fix → **Patch version bump** (0.1.0 → 0.1.1)
+- `feat!:` or `BREAKING CHANGE:` → **Major version bump** (0.1.0 → 1.0.0)
+- `docs:`, `style:`, `refactor:`, `test:`, `chore:` → No release
 
-### 8. Create a Pull Request
+**Examples:**
+```bash
+git commit -m "feat: add support for custom manifest paths"
+git commit -m "fix: correctly handle nested asset directories"
+git commit -m "feat!: remove deprecated --force option"
+```
+
+### 7. Create a Pull Request
 
 ```bash
 git push origin feature/your-feature-name
@@ -139,7 +119,7 @@ Before creating a pull request, ensure:
 - [ ] All tests pass (`pnpm test`)
 - [ ] New features include appropriate tests
 - [ ] Documentation is updated (if needed)
-- [ ] Changeset is created (`pnpm changeset`)
+- [ ] PR title follows Conventional Commits format (e.g., `feat:`, `fix:`)
 
 ### Writing Tests
 
@@ -159,42 +139,41 @@ describe('Feature name', () => {
 
 ## Release Process
 
-Releases are **fully automated**.
+Releases are **fully automated** using [semantic-release](https://semantic-release.gitbook.io/).
 
 ### Automated Release Flow
 
-1. **PR with changes + changeset**
+1. **Create PR with Conventional Commits**
    ```bash
    # Create feature branch
    git checkout -b feature/new-feature
 
-   # Create changeset
-   pnpm changeset
+   # Make changes and commit with conventional format
+   git commit -m "feat: add new feature"
 
    # Push and create PR
    git push origin feature/new-feature
    ```
 
 2. **Merge PR to main**
-   - GitHub Actions automatically creates a **Version PR**
-   - Version PR includes:
-     - Updated `package.json` version
-     - Auto-generated `CHANGELOG.md`
-     - Removed changeset files
+   - semantic-release analyzes all commits since last release
+   - Automatically determines version bump based on commit types:
+     - `feat:` → Minor version (0.1.0 → 0.2.0)
+     - `fix:` → Patch version (0.1.0 → 0.1.1)
+     - `feat!:` or `BREAKING CHANGE:` → Major version (0.1.0 → 1.0.0)
+   - Updates `package.json` and `CHANGELOG.md`
+   - Publishes to npm with provenance
+   - Creates GitHub Release with release notes
 
-3. **Merge Version PR**
-   - Automatically publishes to npm
-   - Creates GitHub Release
-
-### Version PR Example
+### Example Release Output
 
 ```
-Title: chore: release package
-
-Changes:
-- package.json: 0.1.0 → 0.2.0
-- CHANGELOG.md: New entries added
-- .changeset/*.md: Deleted
+Analyzing commits...
+✔ Found 3 commits since last release
+✔ Determined next version: 0.2.0
+✔ Updated package.json and CHANGELOG.md
+✔ Published to npm: cdk-agc@0.2.0
+✔ Created GitHub Release: v0.2.0
 ```
 
 ### Manual Release (Emergency Only)
@@ -202,16 +181,8 @@ Changes:
 If GitHub Actions fails:
 
 ```bash
-# 1. Update version
-pnpm version
-
-# 2. Commit & push
-git add .
-git commit -m "chore: release v0.x.x"
-git push
-
-# 3. Manual publish
-pnpm release
+# Run semantic-release locally
+npx semantic-release --no-ci
 ```
 
 ## CI/CD
@@ -219,21 +190,22 @@ pnpm release
 ### CI (Continuous Integration)
 
 **`.github/workflows/ci.yml`** - Runs on PRs and pushes:
-- Matrix build with Node.js 20, 22
+- Matrix build with Node.js 20, 22, 24
 - Lint check
 - Format check
 - Build
-- Test execution
-- Coverage upload (Node.js 22 only)
+- Unit test execution
+- Integration test (Node.js 24 only)
+- Coverage upload (Node.js 24 only)
 
-### Version & Release (Automated Versioning & Publishing)
+### Release (Automated Publishing)
 
-**`.github/workflows/version.yml`** - Runs on pushes to main:
-- Detects changesets
-- Creates Version PR (initial)
-- When Version PR is merged:
-  - Automatically publishes to npm
-  - Automatically creates GitHub Release
+**`.github/workflows/release.yml`** - Runs on pushes to main:
+- Analyzes commits with semantic-release
+- Determines version based on Conventional Commits
+- Updates package.json and CHANGELOG.md
+- Publishes to npm with provenance
+- Creates GitHub Release with auto-generated notes
 
 ## Project Structure
 
@@ -243,20 +215,22 @@ cdk-agc/
 │   ├── cli.ts           # CLI entry point
 │   ├── cleanup.ts       # Core functionality
 │   └── cleanup.test.ts  # Tests
+├── test-cdk/            # Integration tests
 ├── dist/                # Build artifacts
-├── .changeset/          # Changesets
 ├── .github/workflows/   # CI/CD
+├── .releaserc.json      # semantic-release config
 └── package.json
 ```
 
 ## Tools & Libraries
 
 - **TypeScript**: Type-safe development
+- **tsdown**: Fast build tool (rolldown-based)
 - **Vitest**: Fast test framework
 - **Oxlint**: Ultra-fast linter
 - **Oxfmt**: Ultra-fast formatter
 - **Commander**: CLI framework
-- **Changesets**: Version management
+- **semantic-release**: Automated version management and publishing
 
 ## Questions & Support
 
