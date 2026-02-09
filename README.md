@@ -79,7 +79,6 @@ npx cdk-agc -k 24
 ### Deletion Candidates
 
 - `asset.{hash}/` - Unreferenced asset directories
-- `asset.{hash}.zip` - Unreferenced asset files
 
 ### Always Protected
 
