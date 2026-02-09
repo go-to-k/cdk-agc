@@ -38,6 +38,10 @@ npx cdk-agc
 npm install -g cdk-agc
 ```
 
+## Requirements
+
+- Node.js >= 20.0.0
+
 ## Usage
 
 ### Basic Examples
@@ -130,26 +134,6 @@ npx cdk-agc -k 1  # Keep last hour's assets for quick rollback
 npx cdk-agc -o ./apps/api/cdk.out
 npx cdk-agc -o ./apps/web/cdk.out
 ```
-
-## How It Works
-
-1. **Read Manifest**: Parse `manifest.json` and recursively collect all referenced paths
-2. **Scan Directory**: List all files/directories in the output directory
-3. **Apply Protection Policy**: Check each item against protection criteria
-4. **Calculate Savings**: Compute total size to be reclaimed
-5. **Execute Cleanup**: Delete unprotected items (or show preview in dry-run mode)
-
-All file operations use `Promise.all()` for concurrent execution and optimal performance.
-
-## Safety
-
-- **Non-destructive by default**: Use `-d/--dry-run` to preview before actual deletion
-- **Conservative protection**: Keeps all CDK metadata files
-- **Rollback support**: Use `-k/--keep-hours` to maintain recent history
-
-## Requirements
-
-- Node.js >= 20.0.0
 
 ## Contributing
 
