@@ -4,7 +4,7 @@
   "description": "CDK Assembly Garbage Collector - Clean up unused assets in cdk.out",
   "type": "module",
   "bin": {
-    "cdk-agc": "./dist/cli.js"
+    "cdk-agc": "./dist/cli.mjs"
   },
   "files": [
     "dist",
@@ -20,8 +20,8 @@
   },
   "homepage": "https://github.com/goto/cdk-agc#readme",
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
+    "build": "tsdown",
+    "dev": "tsdown --watch",
     "lint": "oxlint src",
     "format": "oxfmt src",
     "format:check": "oxfmt --check src",
@@ -30,7 +30,7 @@
     "test:coverage": "vitest run --coverage",
     "changeset": "changeset",
     "version": "changeset version",
-    "release": "pnpm run build && changeset publish",
+    "release": "pnpm run build && changeset publish --provenance",
     "prepublishOnly": "pnpm run build"
   },
   "keywords": [
@@ -55,6 +55,7 @@
     "@vitest/coverage-v8": "^4.0.18",
     "oxfmt": "^0.28.0",
     "oxlint": "^1.43.0",
+    "tsdown": "^0.20.3",
     "typescript": "^5.7.3",
     "vitest": "^4.0.18"
   },

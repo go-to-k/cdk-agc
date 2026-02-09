@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const CDK_OUT = path.join(__dirname, '../cdk.out');
-const CLI = path.join(__dirname, '../../dist/cli.js');
+const CLI = path.join(__dirname, '../../dist/cli.mjs');
 const APP_TS = path.join(__dirname, '../app.ts');
 
 console.log('\n=== Test 2: Multiple Synths (Old Assets) ===\n');

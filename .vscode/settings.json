@@ -1,0 +1,10 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "oxc-project.oxc-vscode",
+  "[typescript]": {
+    "editor.defaultFormatter": "oxc-project.oxc-vscode"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "oxc-project.oxc-vscode"
+  }
+}

@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const CDK_OUT = path.join(__dirname, '../cdk.out');
-const CLI = path.join(__dirname, '../../dist/cli.js');
+const CLI = path.join(__dirname, '../../dist/cli.mjs');
 
 console.log('\n=== Test 1: Basic Cleanup ===\n');
 

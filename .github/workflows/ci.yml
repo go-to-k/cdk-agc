@@ -41,6 +41,9 @@ jobs:
       - name: Test
         run: pnpm run test
 
+      - name: Integration Test
+        run: pnpm --filter test-cdk test
+
       - name: Upload coverage
         if: matrix.node-version == 22
         uses: codecov/codecov-action@v5
