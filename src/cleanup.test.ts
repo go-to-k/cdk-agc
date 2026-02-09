@@ -251,4 +251,36 @@ describe("cleanupAssets", () => {
     // Unreferenced asset should be deleted
     expect(await fileExists("asset.unused")).toBe(false);
   });
+
+  it("should protect unreferenced assets with --keep-hours", async () => {
+    await createTestManifest();
+
+    // Create an assets.json file with one reference
+    const assetsJson = {
+      version: "1.0.0",
+      files: {
+        "referenced": {
+          source: {
+            path: "asset.referenced",
+            packaging: "zip",
+          },
+          destinations: {},
+        },
+      },
+    };
+
+    await createTestFile("Stack.assets.json", JSON.stringify(assetsJson, null, 2));
+
+    // Create referenced and unreferenced assets
+    await createTestFile("asset.referenced/index.js", "console.log('referenced')");
+    await createTestFile("asset.recent-unreferenced/index.js", "console.log('recent')");
+
+    await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 1 });
+
+    // Referenced asset should be protected
+    expect(await fileExists("asset.referenced/index.js")).toBe(true);
+
+    // Recent unreferenced asset should be protected by keepHours
+    expect(await fileExists("asset.recent-unreferenced/index.js")).toBe(true);
+  });
 });

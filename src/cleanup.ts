@@ -235,16 +235,29 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
   // Scan directory items
   const entries = await fs.readdir(outdir);
   const itemsToDelete: Array<{ path: string; size: number }> = [];
-  const protectedAssets: Array<{ path: string; stacks: string[] }> = [];
+  const referencedAssets: Array<{ path: string; stacks: string[] }> = [];
+  const timeProtectedAssets: string[] = [];
+  let protectedCount = 0;
 
   await Promise.all(
     entries.map(async (entry) => {
       const itemPath = path.join(outdir, entry);
 
       if (await isProtected(itemPath, outdir, activePaths, keepHours)) {
+        protectedCount++;
         const stacks = assetToStacksMap.get(itemPath);
+
+        // Check if this is an asset protected by stack reference
         if (stacks && stacks.size > 0 && entry.startsWith("asset.")) {
-          protectedAssets.push({ path: entry, stacks: Array.from(stacks).sort() });
+          referencedAssets.push({ path: entry, stacks: Array.from(stacks).sort() });
+        }
+        // Check if this is protected by keepHours but not referenced
+        else if (keepHours > 0 && entry.startsWith("asset.")) {
+          const stats = await fs.stat(itemPath);
+          const ageHours = (Date.now() - stats.mtimeMs) / (1000 * 60 * 60);
+          if (ageHours <= keepHours) {
+            timeProtectedAssets.push(entry);
+          }
         }
         return;
       }
@@ -256,17 +269,21 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
 
   // Display results
   if (itemsToDelete.length === 0) {
-    const totalProtected = entries.length;
-    console.log(
-      `✓ No unused assets found. ${totalProtected} item(s) are actively referenced and protected.`,
-    );
+    console.log(`✓ No unused assets found. ${protectedCount} item(s) are protected.`);
 
-    if (protectedAssets.length > 0) {
-      console.log(`\nProtected assets:`);
-      for (const asset of protectedAssets) {
+    if (referencedAssets.length > 0) {
+      console.log(`\nAssets referenced in stacks:`);
+      for (const asset of referencedAssets) {
         const stacksText =
           asset.stacks.length === 1 ? asset.stacks[0] : asset.stacks.join(", ");
         console.log(`  - ${asset.path} (used in ${stacksText})`);
+      }
+    }
+
+    if (timeProtectedAssets.length > 0) {
+      console.log(`\nAssets protected by --keep-hours ${keepHours}:`);
+      for (const asset of timeProtectedAssets) {
+        console.log(`  - ${asset}`);
       }
     }
     return;
