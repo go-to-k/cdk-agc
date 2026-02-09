@@ -13,12 +13,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/goto/cdk-agc.git"
+    "url": "git+https://github.com/go-to-k/cdk-agc.git"
   },
   "bugs": {
-    "url": "https://github.com/goto/cdk-agc/issues"
+    "url": "https://github.com/go-to-k/cdk-agc/issues"
   },
-  "homepage": "https://github.com/goto/cdk-agc#readme",
+  "homepage": "https://github.com/go-to-k/cdk-agc#readme",
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
@@ -46,7 +46,7 @@
     "storage-optimization",
     "cli"
   ],
-  "author": "goto",
+  "author": "go-to-k",
   "license": "Apache-2.0",
   "dependencies": {
     "commander": "^12.1.0"
