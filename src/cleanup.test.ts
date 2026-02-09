@@ -139,14 +139,14 @@ describe("cleanupAssets", () => {
     const assetsJson = {
       version: "1.0.0",
       files: {
-        "abc123": {
+        abc123: {
           source: {
             path: "asset.abc123",
             packaging: "zip",
           },
           destinations: {},
         },
-        "def456": {
+        def456: {
           source: {
             path: "asset.def456",
             packaging: "file",
@@ -155,7 +155,7 @@ describe("cleanupAssets", () => {
         },
       },
       dockerImages: {
-        "ghi789": {
+        ghi789: {
           source: {
             directory: "asset.ghi789",
             dockerBuildArgs: {},
@@ -193,14 +193,14 @@ describe("cleanupAssets", () => {
     const stack1AssetsJson = {
       version: "1.0.0",
       files: {
-        "shared123": {
+        shared123: {
           source: {
             path: "asset.shared123",
             packaging: "zip",
           },
           destinations: {},
         },
-        "stack1only": {
+        stack1only: {
           source: {
             path: "asset.stack1only",
             packaging: "file",
@@ -213,14 +213,14 @@ describe("cleanupAssets", () => {
     const stack2AssetsJson = {
       version: "1.0.0",
       files: {
-        "shared123": {
+        shared123: {
           source: {
             path: "asset.shared123",
             packaging: "zip",
           },
           destinations: {},
         },
-        "stack2only": {
+        stack2only: {
           source: {
             path: "asset.stack2only",
             packaging: "file",
@@ -259,7 +259,7 @@ describe("cleanupAssets", () => {
     const assetsJson = {
       version: "1.0.0",
       files: {
-        "referenced": {
+        referenced: {
           source: {
             path: "asset.referenced",
             packaging: "zip",
@@ -291,7 +291,7 @@ describe("cleanupAssets", () => {
     const assetsJson = {
       version: "1.0.0",
       files: {
-        "referenced": {
+        referenced: {
           source: {
             path: "asset.referenced",
             packaging: "zip",

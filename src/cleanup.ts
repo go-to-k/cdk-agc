@@ -22,7 +22,6 @@ interface Manifest {
   artifacts?: Record<string, ManifestArtifact>;
 }
 
-
 /**
  * Recursively collect all paths referenced in the manifest
  */
