@@ -22,11 +22,11 @@ console.log('1. Running CDK synth...');
 execSync('pnpm synth', { cwd: path.join(__dirname, '..'), stdio: 'inherit' });
 
 // Step 2: Add dummy files
-console.log('\n2. Adding dummy files...');
-fs.writeFileSync(path.join(CDK_OUT, 'unused-file.txt'), 'This file should be deleted');
-fs.mkdirSync(path.join(CDK_OUT, 'unused-dir'), { recursive: true });
-fs.writeFileSync(path.join(CDK_OUT, 'unused-dir/test.txt'), 'test content');
-console.log('   ✓ Added unused-file.txt and unused-dir/');
+console.log('\n2. Adding dummy asset and user files...');
+fs.mkdirSync(path.join(CDK_OUT, 'asset.unused'), { recursive: true });
+fs.writeFileSync(path.join(CDK_OUT, 'asset.unused/test.txt'), 'This should be deleted');
+fs.writeFileSync(path.join(CDK_OUT, 'user-file.txt'), 'This should NOT be deleted');
+console.log('   ✓ Added asset.unused/ and user-file.txt');
 
 // Step 3: Dry run
 console.log('\n3. Running cdk-agc in dry-run mode...');
@@ -38,8 +38,8 @@ execSync(`node ${CLI} -o ${CDK_OUT}`, { stdio: 'inherit' });
 
 // Step 5: Verify
 console.log('\n5. Verifying cleanup...');
-const hasUnusedFile = fs.existsSync(path.join(CDK_OUT, 'unused-file.txt'));
-const hasUnusedDir = fs.existsSync(path.join(CDK_OUT, 'unused-dir'));
+const hasUnusedAsset = fs.existsSync(path.join(CDK_OUT, 'asset.unused'));
+const hasUserFile = fs.existsSync(path.join(CDK_OUT, 'user-file.txt'));
 const hasManifest = fs.existsSync(path.join(CDK_OUT, 'manifest.json'));
 const hasTemplate = fs.existsSync(path.join(CDK_OUT, 'TestStack.template.json'));
 
@@ -89,12 +89,15 @@ if (protectedAssetCount > 0) {
   console.log(`   ✓ ${protectedAssetCount} asset(s) protected`);
 }
 
-if (!hasUnusedFile && !hasUnusedDir && hasManifest && hasTemplate && allAssetsProtected) {
+if (!hasUnusedAsset && hasUserFile && hasManifest && hasTemplate && allAssetsProtected) {
   console.log('   ✓ Cleanup successful!');
   console.log('   ✓ Protected files still exist');
-  console.log('   ✓ Unused files removed');
+  console.log('   ✓ Unused asset removed');
+  console.log('   ✓ User file preserved');
 } else {
   console.error('   ✗ Verification failed!');
+  if (hasUnusedAsset) console.error('   ✗ Unused asset was not deleted');
+  if (!hasUserFile) console.error('   ✗ User file was deleted (should be preserved)');
   process.exit(1);
 }
 

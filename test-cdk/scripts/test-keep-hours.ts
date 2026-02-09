@@ -21,23 +21,24 @@ try {
 console.log('1. Running CDK synth...');
 execSync('pnpm synth', { cwd: path.join(__dirname, '..'), stdio: 'inherit' });
 
-// Step 2: Add recent file
-console.log('\n2. Adding recent file...');
-fs.writeFileSync(path.join(CDK_OUT, 'recent-file.txt'), 'This is a recent file');
-console.log('   ✓ Added recent-file.txt');
+// Step 2: Add recent asset (simulating recently created but unused asset)
+console.log('\n2. Adding recent asset...');
+fs.mkdirSync(path.join(CDK_OUT, 'asset.recent123'), { recursive: true });
+fs.writeFileSync(path.join(CDK_OUT, 'asset.recent123/index.js'), 'This is a recent asset');
+console.log('   ✓ Added asset.recent123/');
 
 // Step 3: Cleanup with --keep-hours 1
 console.log('\n3. Running cleanup with --keep-hours 1...');
 execSync(`node ${CLI} -o ${CDK_OUT} -k 1`, { stdio: 'inherit' });
 
-// Step 4: Verify recent file still exists
-console.log('\n4. Verifying recent file is protected...');
-const hasRecentFile = fs.existsSync(path.join(CDK_OUT, 'recent-file.txt'));
+// Step 4: Verify recent asset still exists
+console.log('\n4. Verifying recent asset is protected...');
+const hasRecentAsset = fs.existsSync(path.join(CDK_OUT, 'asset.recent123'));
 
-if (hasRecentFile) {
-  console.log('   ✓ Recent file protected by --keep-hours option');
+if (hasRecentAsset) {
+  console.log('   ✓ Recent asset protected by --keep-hours option');
 } else {
-  console.error('   ✗ Recent file was deleted (should be protected)');
+  console.error('   ✗ Recent asset was deleted (should be protected)');
   process.exit(1);
 }
 
@@ -45,13 +46,13 @@ if (hasRecentFile) {
 console.log('\n5. Running cleanup without --keep-hours...');
 execSync(`node ${CLI} -o ${CDK_OUT}`, { stdio: 'inherit' });
 
-// Step 6: Verify recent file is now deleted
-console.log('\n6. Verifying recent file is now deleted...');
-const stillHasRecentFile = fs.existsSync(path.join(CDK_OUT, 'recent-file.txt'));
+// Step 6: Verify recent asset is now deleted
+console.log('\n6. Verifying recent asset is now deleted...');
+const stillHasRecentAsset = fs.existsSync(path.join(CDK_OUT, 'asset.recent123'));
 
-if (!stillHasRecentFile) {
-  console.log('   ✓ Recent file deleted without protection\n');
+if (!stillHasRecentAsset) {
+  console.log('   ✓ Recent asset deleted without protection\n');
 } else {
-  console.error('   ✗ Recent file still exists (should be deleted)');
+  console.error('   ✗ Recent asset still exists (should be deleted)');
   process.exit(1);
 }

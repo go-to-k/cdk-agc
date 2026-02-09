@@ -47,13 +47,13 @@ describe("cleanupAssets", () => {
       },
     });
     await createTestFile("MyStack.template.json", "{}");
-    await createTestFile("unused.txt", "delete me");
+    await createTestFile("asset.unused/file.txt", "delete me");
 
     await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 });
 
     expect(await fileExists("manifest.json")).toBe(true);
     expect(await fileExists("MyStack.template.json")).toBe(true);
-    expect(await fileExists("unused.txt")).toBe(false);
+    expect(await fileExists("asset.unused")).toBe(false);
   });
 
   it("should protect essential metadata files", async () => {
@@ -62,7 +62,7 @@ describe("cleanupAssets", () => {
     await createTestFile("cdk.context.json", "{}");
     await createTestFile("cdk.out", "");
     await createTestFile("Stack.assets.json", "{}");
-    await createTestFile("unused.txt", "delete me");
+    await createTestFile("asset.unused/file.txt", "delete me");
 
     await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 });
 
@@ -71,27 +71,27 @@ describe("cleanupAssets", () => {
     expect(await fileExists("cdk.context.json")).toBe(true);
     expect(await fileExists("cdk.out")).toBe(true);
     expect(await fileExists("Stack.assets.json")).toBe(true);
-    expect(await fileExists("unused.txt")).toBe(false);
+    expect(await fileExists("asset.unused")).toBe(false);
   });
 
   it("should not delete files in dry-run mode", async () => {
     await createTestManifest();
-    await createTestFile("unused.txt", "should remain");
+    await createTestFile("asset.unused/file.txt", "should remain");
 
     await cleanupAssets({ outdir: TEST_DIR, dryRun: true, keepHours: 0 });
 
-    expect(await fileExists("unused.txt")).toBe(true);
+    expect(await fileExists("asset.unused/file.txt")).toBe(true);
   });
 
   it("should protect recent files based on keepHours", async () => {
     await createTestManifest();
-    await createTestFile("recent.txt", "new file");
+    await createTestFile("asset.recent/file.txt", "new file");
     // Wait a bit to ensure mtime is set
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 1 });
 
-    expect(await fileExists("recent.txt")).toBe(true);
+    expect(await fileExists("asset.recent/file.txt")).toBe(true);
   });
 
   it("should handle nested paths in manifest", async () => {
@@ -104,12 +104,12 @@ describe("cleanupAssets", () => {
       },
     });
     await createTestFile("assembly-MyStack/MyStack.template.json", "{}");
-    await createTestFile("unused-dir/file.txt", "delete me");
+    await createTestFile("asset.unused-dir/file.txt", "delete me");
 
     await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 });
 
     expect(await fileExists("assembly-MyStack/MyStack.template.json")).toBe(true);
-    expect(await fileExists("unused-dir")).toBe(false);
+    expect(await fileExists("asset.unused-dir")).toBe(false);
   });
 
   it("should throw error if manifest.json is missing", async () => {
@@ -282,5 +282,43 @@ describe("cleanupAssets", () => {
 
     // Recent unreferenced asset should be protected by keepHours
     expect(await fileExists("asset.recent-unreferenced/index.js")).toBe(true);
+  });
+
+  it("should not delete user files (non-asset files)", async () => {
+    await createTestManifest();
+
+    // Create an assets.json file
+    const assetsJson = {
+      version: "1.0.0",
+      files: {
+        "referenced": {
+          source: {
+            path: "asset.referenced",
+            packaging: "zip",
+          },
+          destinations: {},
+        },
+      },
+    };
+
+    await createTestFile("Stack.assets.json", JSON.stringify(assetsJson, null, 2));
+
+    // Create CDK-generated asset
+    await createTestFile("asset.referenced/index.js", "console.log('referenced')");
+
+    // Create user files that should NOT be deleted
+    await createTestFile("my-notes.txt", "User notes");
+    await createTestFile("debug.log", "Debug log");
+    await createTestFile("temp-data/data.json", '{"test":true}');
+
+    await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 });
+
+    // Referenced asset should be protected
+    expect(await fileExists("asset.referenced/index.js")).toBe(true);
+
+    // User files should NOT be deleted
+    expect(await fileExists("my-notes.txt")).toBe(true);
+    expect(await fileExists("debug.log")).toBe(true);
+    expect(await fileExists("temp-data/data.json")).toBe(true);
   });
 });

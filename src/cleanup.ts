@@ -22,7 +22,6 @@ interface Manifest {
   artifacts?: Record<string, ManifestArtifact>;
 }
 
-const PROTECTED_FILES = new Set(["manifest.json", "tree.json", "cdk.context.json", "cdk.out"]);
 
 /**
  * Recursively collect all paths referenced in the manifest
@@ -134,18 +133,6 @@ async function isProtected(
   activePaths: Set<string>,
   keepHours: number,
 ): Promise<boolean> {
-  const basename = path.basename(itemPath);
-
-  // Always protect essential metadata files
-  if (PROTECTED_FILES.has(basename)) {
-    return true;
-  }
-
-  // Always protect *.template.json and *.assets.json
-  if (basename.endsWith(".template.json") || basename.endsWith(".assets.json")) {
-    return true;
-  }
-
   // Protect paths referenced in manifest
   if (activePaths.has(itemPath)) {
     return true;
@@ -235,47 +222,17 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
   // Scan directory items
   const entries = await fs.readdir(outdir);
   const itemsToDelete: Array<{ path: string; size: number }> = [];
-  const referencedAssets: Array<{ path: string; stacks: string[] }> = [];
-  const timeProtectedAssets: string[] = [];
-  const stackFiles: Map<string, { template?: string; assets?: string }> = new Map();
-  const globalMetadataFiles: string[] = [];
 
   await Promise.all(
     entries.map(async (entry) => {
       const itemPath = path.join(outdir, entry);
 
-      if (await isProtected(itemPath, outdir, activePaths, keepHours)) {
-        const stacks = assetToStacksMap.get(itemPath);
+      // Only consider asset.* files/directories for deletion
+      if (!entry.startsWith("asset.")) {
+        return;
+      }
 
-        // Categorize protected items
-        if (stacks && stacks.size > 0 && entry.startsWith("asset.")) {
-          // Asset protected by stack reference
-          referencedAssets.push({ path: entry, stacks: Array.from(stacks).sort() });
-        } else if (keepHours > 0 && entry.startsWith("asset.")) {
-          // Asset protected by keepHours but not referenced
-          const stats = await fs.stat(itemPath);
-          const ageHours = (Date.now() - stats.mtimeMs) / (1000 * 60 * 60);
-          if (ageHours <= keepHours) {
-            timeProtectedAssets.push(entry);
-          }
-        } else if (entry.endsWith(".template.json")) {
-          // Stack template
-          const stackName = entry.replace(".template.json", "");
-          if (!stackFiles.has(stackName)) {
-            stackFiles.set(stackName, {});
-          }
-          stackFiles.get(stackName)!.template = entry;
-        } else if (entry.endsWith(".assets.json")) {
-          // Stack assets metadata
-          const stackName = entry.replace(".assets.json", "");
-          if (!stackFiles.has(stackName)) {
-            stackFiles.set(stackName, {});
-          }
-          stackFiles.get(stackName)!.assets = entry;
-        } else if (PROTECTED_FILES.has(entry)) {
-          // Global metadata files
-          globalMetadataFiles.push(entry);
-        }
+      if (await isProtected(itemPath, outdir, activePaths, keepHours)) {
         return;
       }
 
@@ -286,51 +243,7 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
 
   // Display results
   if (itemsToDelete.length === 0) {
-    const totalStacks = stackFiles.size;
-    const totalProtected =
-      referencedAssets.length + timeProtectedAssets.length + globalMetadataFiles.length + totalStacks * 2;
-    console.log(`✓ No unused assets found. ${totalProtected} item(s) are protected.\n`);
-
-    if (globalMetadataFiles.length > 0) {
-      console.log(`Global metadata files (${globalMetadataFiles.length}):`);
-      for (const file of globalMetadataFiles.sort()) {
-        console.log(`  - ${file}`);
-      }
-      console.log("");
-    }
-
-    if (stackFiles.size > 0) {
-      console.log(`Stacks (${stackFiles.size}):`);
-      const sortedStacks = Array.from(stackFiles.keys()).sort();
-      for (const stackName of sortedStacks) {
-        const files = stackFiles.get(stackName)!;
-        console.log(`  ${stackName}:`);
-        if (files.template) {
-          console.log(`    - ${files.template}`);
-        }
-        if (files.assets) {
-          console.log(`    - ${files.assets}`);
-        }
-      }
-      console.log("");
-    }
-
-    if (referencedAssets.length > 0) {
-      console.log(`Assets referenced in stacks (${referencedAssets.length}):`);
-      for (const asset of referencedAssets) {
-        const stacksText =
-          asset.stacks.length === 1 ? asset.stacks[0] : asset.stacks.join(", ");
-        console.log(`  - ${asset.path} (used in ${stacksText})`);
-      }
-      console.log("");
-    }
-
-    if (timeProtectedAssets.length > 0) {
-      console.log(`Assets protected by --keep-hours ${keepHours} (${timeProtectedAssets.length}):`);
-      for (const asset of timeProtectedAssets.sort()) {
-        console.log(`  - ${asset}`);
-      }
-    }
+    console.log(`✓ No unused assets found.`);
     return;
   }
 

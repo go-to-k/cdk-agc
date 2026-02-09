@@ -36,16 +36,26 @@ console.log('   ✓ Stack modified');
 console.log('\n3. Second CDK synth...');
 execSync('pnpm synth', { cwd: path.join(__dirname, '..'), stdio: 'inherit' });
 
-// Step 4: Add some old assets manually
+// Step 4: Add some old assets manually (simulating old/unused assets)
 console.log('\n4. Simulating old assets...');
-fs.writeFileSync(path.join(CDK_OUT, 'old-asset.txt'), 'old content');
-console.log('   ✓ Added old-asset.txt');
+fs.mkdirSync(path.join(CDK_OUT, 'asset.old123'), { recursive: true });
+fs.writeFileSync(path.join(CDK_OUT, 'asset.old123/index.js'), 'old content');
+console.log('   ✓ Added asset.old123/');
 
 // Step 5: Cleanup
 console.log('\n5. Running cleanup...');
 execSync(`node ${CLI} -o ${CDK_OUT}`, { stdio: 'inherit' });
 
-// Step 6: Restore original file
-console.log('\n6. Restoring original stack...');
+// Step 6: Verify old asset was removed
+console.log('\n6. Verifying old asset was removed...');
+const hasOldAsset = fs.existsSync(path.join(CDK_OUT, 'asset.old123'));
+if (hasOldAsset) {
+  console.error('   ✗ Old asset was not deleted');
+  process.exit(1);
+}
+console.log('   ✓ Old asset removed');
+
+// Step 7: Restore original file
+console.log('\n7. Restoring original stack...');
 fs.writeFileSync(APP_TS, appContent);
 console.log('   ✓ Stack restored\n');
