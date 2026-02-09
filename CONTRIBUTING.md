@@ -6,8 +6,30 @@ Thank you for your interest in contributing to cdk-agc!
 
 ### Prerequisites
 
-- Node.js >= 20.0.0
-- pnpm >= 10.0.0
+- **Node.js 24+** (recommended via [mise](https://mise.jdx.dev/))
+- **pnpm >= 10.0.0**
+
+### Node.js Version Management
+
+This project uses Node.js 24 for development. We recommend using [mise](https://mise.jdx.dev/) for automatic version switching.
+
+**With mise:**
+
+```bash
+# mise will automatically use Node.js 24 when you enter the project directory
+cd cdk-agc
+# Node.js 24 is automatically activated via .tool-versions
+```
+
+**Without mise:**
+
+```bash
+# Manually install and use Node.js 24
+nvm install 24
+nvm use 24
+# or
+n 24
+```
 
 ### Setup Steps
 
@@ -16,14 +38,17 @@ Thank you for your interest in contributing to cdk-agc!
 git clone https://github.com/goto/cdk-agc.git
 cd cdk-agc
 
-# Install dependencies
+# Install dependencies (workspace includes test-cdk)
 pnpm install
 
 # Build
 pnpm run build
 
-# Run tests
+# Run unit tests
 pnpm test
+
+# Run integration tests (requires Node.js 24)
+pnpm --filter test-cdk test
 ```
 
 ## Development Workflow
@@ -58,8 +83,10 @@ pnpm run format:check
 
 ### 4. Run Tests
 
+**Unit Tests:**
+
 ```bash
-# Run all tests
+# Run unit tests
 pnpm test
 
 # Watch mode
@@ -69,6 +96,20 @@ pnpm run test:watch
 pnpm run test:coverage
 ```
 
+**Integration Tests:**
+
+```bash
+# Run integration tests (requires Node.js 24)
+pnpm --filter test-cdk test
+
+# Run specific integration test
+pnpm --filter test-cdk test:basic
+pnpm --filter test-cdk test:multiple
+pnpm --filter test-cdk test:keep-hours
+```
+
+**Note:** Integration tests use native TypeScript support in Node.js 24 (`node --enable-source-maps *.ts`). If you're using Node.js 20-22, use mise or switch to Node.js 24 manually.
+
 ### 5. Verify Build
 
 ```bash
@@ -76,8 +117,8 @@ pnpm run test:coverage
 pnpm run build
 
 # Test CLI execution
-node dist/cli.js --help
-node dist/cli.js -d
+node dist/cli.mjs --help
+node dist/cli.mjs -d
 ```
 
 ### 6. Commit
@@ -88,12 +129,14 @@ git commit -m "feat: add support for custom manifest paths"
 ```
 
 **Commit Message Convention (Conventional Commits):**
+
 - `feat:` New feature → **Minor version bump** (0.1.0 → 0.2.0)
 - `fix:` Bug fix → **Patch version bump** (0.1.0 → 0.1.1)
 - `feat!:` or `BREAKING CHANGE:` → **Major version bump** (0.1.0 → 1.0.0)
 - `docs:`, `style:`, `refactor:`, `test:`, `chore:` → No release
 
 **Examples:**
+
 ```bash
 git commit -m "feat: add support for custom manifest paths"
 git commit -m "fix: correctly handle nested asset directories"
@@ -117,6 +160,7 @@ Then create a pull request on GitHub.
 Format: `<type>(<scope>): <description>`
 
 **Allowed types:**
+
 - `feat`: New feature → Minor version bump
 - `fix`: Bug fix → Patch version bump
 - `docs`: Documentation only
@@ -134,6 +178,7 @@ Format: `<type>(<scope>): <description>`
 **Breaking changes:** Add `!` after type (e.g., `feat!:`) or include `BREAKING CHANGE:` in description
 
 **Examples:**
+
 - ✅ `feat: add support for custom manifest paths`
 - ✅ `fix: correctly handle nested asset directories`
 - ✅ `feat(cli): add --verbose flag`
@@ -175,6 +220,7 @@ Releases are **fully automated** using [semantic-release](https://semantic-relea
 ### Automated Release Flow
 
 1. **Create PR with Conventional Commits**
+
    ```bash
    # Create feature branch
    git checkout -b feature/new-feature
@@ -221,6 +267,7 @@ npx semantic-release --no-ci
 ### CI (Continuous Integration)
 
 **`.github/workflows/ci.yml`** - Runs on PRs and pushes:
+
 - Matrix build with Node.js 20, 22, 24
 - Lint check
 - Format check
@@ -232,6 +279,7 @@ npx semantic-release --no-ci
 ### Release (Automated Publishing)
 
 **`.github/workflows/release.yml`** - Runs on pushes to main:
+
 - Analyzes commits with semantic-release
 - Determines version based on Conventional Commits
 - Updates package.json and CHANGELOG.md
@@ -245,23 +293,48 @@ cdk-agc/
 ├── src/
 │   ├── cli.ts           # CLI entry point
 │   ├── cleanup.ts       # Core functionality
-│   └── cleanup.test.ts  # Tests
-├── test-cdk/            # Integration tests
-├── dist/                # Build artifacts
+│   └── cleanup.test.ts  # Unit tests
+├── test-cdk/            # Integration tests (CDK project)
+│   ├── app.ts           # CDK app for testing
+│   ├── scripts/         # Test scripts
+│   └── lambda/          # Lambda code for asset generation
+├── dist/                # Build artifacts (tsdown output)
 ├── .github/workflows/   # CI/CD
+│   ├── ci.yml           # Lint, test, build
+│   ├── release.yml      # Automated releases
+│   └── pr-title-check.yml  # PR title validation
+├── .vscode/             # VSCode settings (Oxc integration)
+├── .tool-versions       # Node.js version (mise/asdf)
 ├── .releaserc.json      # semantic-release config
+├── pnpm-workspace.yaml  # pnpm workspace config
+├── tsdown.config.ts     # Build configuration
 └── package.json
 ```
 
 ## Tools & Libraries
 
+### Core Development
+
 - **TypeScript**: Type-safe development
+- **Node.js 24+**: Native TypeScript support for integration tests
 - **tsdown**: Fast build tool (rolldown-based)
-- **Vitest**: Fast test framework
-- **Oxlint**: Ultra-fast linter
-- **Oxfmt**: Ultra-fast formatter
+- **pnpm**: Fast, efficient package manager with workspace support
+
+### Code Quality
+
+- **Vitest**: Fast unit test framework
+- **Oxlint**: Ultra-fast linter (Rust-based)
+- **Oxfmt**: Ultra-fast formatter (Rust-based)
+
+### Build & Release
+
 - **Commander**: CLI framework
 - **semantic-release**: Automated version management and publishing
+- **GitHub Actions**: CI/CD automation
+
+### Development Tools
+
+- **mise**: Automatic Node.js version switching (optional but recommended)
 
 ## Questions & Support
 
