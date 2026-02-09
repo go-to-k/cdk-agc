@@ -43,7 +43,53 @@ const hasUnusedDir = fs.existsSync(path.join(CDK_OUT, 'unused-dir'));
 const hasManifest = fs.existsSync(path.join(CDK_OUT, 'manifest.json'));
 const hasTemplate = fs.existsSync(path.join(CDK_OUT, 'TestStack.template.json'));
 
-if (!hasUnusedFile && !hasUnusedDir && hasManifest && hasTemplate) {
+// Verify asset files and directories are protected
+const assetsJsonFiles = fs.readdirSync(CDK_OUT).filter(f => f.endsWith('.assets.json'));
+let allAssetsProtected = true;
+let protectedAssetCount = 0;
+
+for (const assetsFile of assetsJsonFiles) {
+  const stackName = assetsFile.replace('.assets.json', '');
+  const assetsContent = JSON.parse(fs.readFileSync(path.join(CDK_OUT, assetsFile), 'utf-8'));
+
+  // Check file assets
+  if (assetsContent.files) {
+    for (const fileEntry of Object.values(assetsContent.files)) {
+      const entry = fileEntry as { source?: { path?: string } };
+      if (entry.source?.path) {
+        const assetPath = path.join(CDK_OUT, entry.source.path);
+        if (!fs.existsSync(assetPath)) {
+          console.error(`   ✗ Asset ${entry.source.path} (used in ${stackName}) was deleted`);
+          allAssetsProtected = false;
+        } else {
+          protectedAssetCount++;
+        }
+      }
+    }
+  }
+
+  // Check docker image assets
+  if (assetsContent.dockerImages) {
+    for (const imageEntry of Object.values(assetsContent.dockerImages)) {
+      const entry = imageEntry as { source?: { directory?: string } };
+      if (entry.source?.directory) {
+        const assetPath = path.join(CDK_OUT, entry.source.directory);
+        if (!fs.existsSync(assetPath)) {
+          console.error(`   ✗ Docker asset ${entry.source.directory} (used in ${stackName}) was deleted`);
+          allAssetsProtected = false;
+        } else {
+          protectedAssetCount++;
+        }
+      }
+    }
+  }
+}
+
+if (protectedAssetCount > 0) {
+  console.log(`   ✓ ${protectedAssetCount} asset(s) protected`);
+}
+
+if (!hasUnusedFile && !hasUnusedDir && hasManifest && hasTemplate && allAssetsProtected) {
   console.log('   ✓ Cleanup successful!');
   console.log('   ✓ Protected files still exist');
   console.log('   ✓ Unused files removed');

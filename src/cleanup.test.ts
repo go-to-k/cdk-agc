@@ -60,6 +60,7 @@ describe("cleanupAssets", () => {
     await createTestManifest();
     await createTestFile("tree.json", "{}");
     await createTestFile("cdk.context.json", "{}");
+    await createTestFile("cdk.out", "");
     await createTestFile("Stack.assets.json", "{}");
     await createTestFile("unused.txt", "delete me");
 
@@ -68,6 +69,7 @@ describe("cleanupAssets", () => {
     expect(await fileExists("manifest.json")).toBe(true);
     expect(await fileExists("tree.json")).toBe(true);
     expect(await fileExists("cdk.context.json")).toBe(true);
+    expect(await fileExists("cdk.out")).toBe(true);
     expect(await fileExists("Stack.assets.json")).toBe(true);
     expect(await fileExists("unused.txt")).toBe(false);
   });
@@ -128,5 +130,59 @@ describe("cleanupAssets", () => {
     await expect(
       cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 }),
     ).resolves.not.toThrow();
+  });
+
+  it("should protect assets referenced in *.assets.json files", async () => {
+    await createTestManifest();
+
+    // Create a mock *.assets.json file with asset references
+    const assetsJson = {
+      version: "1.0.0",
+      files: {
+        "abc123": {
+          source: {
+            path: "asset.abc123",
+            packaging: "zip",
+          },
+          destinations: {},
+        },
+        "def456": {
+          source: {
+            path: "asset.def456",
+            packaging: "file",
+          },
+          destinations: {},
+        },
+      },
+      dockerImages: {
+        "ghi789": {
+          source: {
+            directory: "asset.ghi789",
+            dockerBuildArgs: {},
+          },
+          destinations: {},
+        },
+      },
+    };
+
+    await createTestFile("Stack.assets.json", JSON.stringify(assetsJson, null, 2));
+
+    // Create referenced asset directories and files
+    await createTestFile("asset.abc123/index.js", "console.log('abc')");
+    await createTestFile("asset.def456/data.json", '{"key":"value"}');
+    await createTestFile("asset.ghi789/Dockerfile", "FROM node:20");
+
+    // Create unreferenced asset directory
+    await createTestFile("asset.unused/old.txt", "delete me");
+
+    await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 });
+
+    // Referenced assets should be protected
+    expect(await fileExists("asset.abc123/index.js")).toBe(true);
+    expect(await fileExists("asset.def456/data.json")).toBe(true);
+    expect(await fileExists("asset.ghi789/Dockerfile")).toBe(true);
+
+    // Unreferenced asset should be deleted
+    expect(await fileExists("asset.unused")).toBe(false);
   });
 });

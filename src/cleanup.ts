@@ -22,7 +22,7 @@ interface Manifest {
   artifacts?: Record<string, ManifestArtifact>;
 }
 
-const PROTECTED_FILES = new Set(["manifest.json", "tree.json", "cdk.context.json"]);
+const PROTECTED_FILES = new Set(["manifest.json", "tree.json", "cdk.context.json", "cdk.out"]);
 
 /**
  * Recursively collect all paths referenced in the manifest
@@ -45,24 +45,84 @@ function collectActivePaths(obj: unknown, basePath: string, collected: Set<strin
 }
 
 /**
- * Parse manifest file and get active paths
+ * Parse *.assets.json files and collect asset paths with stack information
  */
-async function getActivePathsFromManifest(outdir: string): Promise<Set<string>> {
+async function collectAssetPaths(
+  outdir: string,
+  activePaths: Set<string>,
+  assetToStacksMap: Map<string, Set<string>>,
+): Promise<void> {
+  const items = await fs.readdir(outdir);
+  const assetFiles = items.filter((item) => item.endsWith(".assets.json"));
+
+  for (const assetFile of assetFiles) {
+    const stackName = assetFile.replace(".assets.json", "");
+
+    try {
+      const content = await fs.readFile(path.join(outdir, assetFile), "utf-8");
+      const assets = JSON.parse(content);
+
+      // Collect asset paths from files object
+      if (assets.files) {
+        for (const fileEntry of Object.values(assets.files)) {
+          const entry = fileEntry as { source?: { path?: string } };
+          if (entry.source?.path) {
+            const assetPath = path.join(outdir, entry.source.path);
+            activePaths.add(assetPath);
+            if (!assetToStacksMap.has(assetPath)) {
+              assetToStacksMap.set(assetPath, new Set());
+            }
+            assetToStacksMap.get(assetPath)!.add(stackName);
+          }
+        }
+      }
+
+      // Collect asset paths from dockerImages object
+      if (assets.dockerImages) {
+        for (const imageEntry of Object.values(assets.dockerImages)) {
+          const entry = imageEntry as { source?: { directory?: string } };
+          if (entry.source?.directory) {
+            const assetPath = path.join(outdir, entry.source.directory);
+            activePaths.add(assetPath);
+            if (!assetToStacksMap.has(assetPath)) {
+              assetToStacksMap.set(assetPath, new Set());
+            }
+            assetToStacksMap.get(assetPath)!.add(stackName);
+          }
+        }
+      }
+    } catch (error) {
+      // Skip malformed asset files
+      console.warn(`Warning: Failed to parse ${assetFile}:`, error);
+    }
+  }
+}
+
+/**
+ * Parse manifest file and get active paths with asset-to-stacks mapping
+ */
+async function getActivePathsFromManifest(
+  outdir: string,
+): Promise<{ activePaths: Set<string>; assetToStacksMap: Map<string, Set<string>> }> {
   const manifestPath = path.join(outdir, "manifest.json");
   const activePaths = new Set<string>();
+  const assetToStacksMap = new Map<string, Set<string>>();
 
   try {
     const content = await fs.readFile(manifestPath, "utf-8");
     const manifest: Manifest = JSON.parse(content);
 
     collectActivePaths(manifest, outdir, activePaths);
+
+    // Also collect paths from *.assets.json files
+    await collectAssetPaths(outdir, activePaths, assetToStacksMap);
   } catch (error) {
     throw new Error(
       `Failed to read manifest.json: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 
-  return activePaths;
+  return { activePaths, assetToStacksMap };
 }
 
 /**
@@ -170,17 +230,22 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
   }
 
   // Collect paths referenced in manifest
-  const activePaths = await getActivePathsFromManifest(outdir);
+  const { activePaths, assetToStacksMap } = await getActivePathsFromManifest(outdir);
 
   // Scan directory items
   const entries = await fs.readdir(outdir);
   const itemsToDelete: Array<{ path: string; size: number }> = [];
+  const protectedAssets: Array<{ path: string; stacks: string[] }> = [];
 
   await Promise.all(
     entries.map(async (entry) => {
       const itemPath = path.join(outdir, entry);
 
       if (await isProtected(itemPath, outdir, activePaths, keepHours)) {
+        const stacks = assetToStacksMap.get(itemPath);
+        if (stacks && stacks.size > 0 && entry.startsWith("asset.")) {
+          protectedAssets.push({ path: entry, stacks: Array.from(stacks).sort() });
+        }
         return;
       }
 
@@ -191,7 +256,19 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
 
   // Display results
   if (itemsToDelete.length === 0) {
-    console.log("✓ No unused assets found. Directory is already clean.");
+    const totalProtected = entries.length;
+    console.log(
+      `✓ No unused assets found. ${totalProtected} item(s) are actively referenced and protected.`,
+    );
+
+    if (protectedAssets.length > 0) {
+      console.log(`\nProtected assets:`);
+      for (const asset of protectedAssets) {
+        const stacksText =
+          asset.stacks.length === 1 ? asset.stacks[0] : asset.stacks.join(", ");
+        console.log(`  - ${asset.path} (used in ${stacksText})`);
+      }
+    }
     return;
   }
 
