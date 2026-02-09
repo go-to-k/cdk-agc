@@ -35,7 +35,7 @@ This helps optimize storage and streamline CI/CD caching.
 npx cdk-agc
 
 # Or install globally
-pnpm add -g cdk-agc
+npm install -g cdk-agc
 ```
 
 ## Usage
