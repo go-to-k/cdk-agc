@@ -4,7 +4,7 @@
   "description": "CDK Assembly Garbage Collector - Clean up unused assets in cdk.out",
   "type": "module",
   "bin": {
-    "cdk-agc": "./dist/cli.mjs"
+    "cdk-agc": "dist/cli.mjs"
   },
   "files": [
     "dist",
