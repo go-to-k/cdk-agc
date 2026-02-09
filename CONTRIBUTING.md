@@ -48,7 +48,7 @@ pnpm run build
 pnpm test
 
 # Run integration tests (requires Node.js 24)
-pnpm --filter test-cdk test
+pnpm run test:integ
 ```
 
 ## Development Workflow
@@ -99,13 +99,13 @@ pnpm run test:coverage
 **Integration Tests:**
 
 ```bash
-# Run integration tests (requires Node.js 24)
-pnpm --filter test-cdk test
+# Run all integration tests (requires Node.js 24)
+pnpm run test:integ
 
 # Run specific integration test
-pnpm --filter test-cdk test:basic
-pnpm --filter test-cdk test:multiple
-pnpm --filter test-cdk test:keep-hours
+pnpm run test:integ:basic       # Basic cleanup test
+pnpm run test:integ:multiple    # Multiple synth test
+pnpm run test:integ:keep-hours  # Keep hours option test
 ```
 
 **Note:** Integration tests use native TypeScript support in Node.js 24 (`node --enable-source-maps *.ts`). If you're using Node.js 20-22, use mise or switch to Node.js 24 manually.
