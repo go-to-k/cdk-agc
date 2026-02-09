@@ -1,0 +1,12 @@
+src/
+test-cdk-out/
+coverage/
+*.test.ts
+*.config.ts
+.github/
+.oxfmt.json
+oxlint.json
+tsconfig.json
+pnpm-lock.yaml
+.DS_Store
+*.log
