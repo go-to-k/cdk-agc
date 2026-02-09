@@ -72,27 +72,37 @@ npx cdk-agc -k 24
 | `-h, --help` | Display help | |
 | `-V, --version` | Display version | |
 
-## Protection Policy
+## What Gets Deleted?
 
-Files/directories are **protected** from deletion if they meet **any** of these criteria:
+`cdk-agc` **only deletes `asset.*` directories and files** that are not actively referenced. All CDK metadata files and user-created files are always preserved.
 
-### 1. Active References
+### Deletion Candidates
 
-Any path referenced in `manifest.json` artifacts section (recursively collected).
+- `asset.{hash}/` - Unreferenced asset directories
+- `asset.{hash}.zip` - Unreferenced asset files
 
-### 2. Recent Modifications
+### Always Protected
 
-Files/directories modified within the last N hours (`--keep-hours`).
-
-### 3. Internal Metadata
-
-Always protected:
+**CDK metadata** (never deleted):
 
 - `manifest.json`
 - `tree.json`
 - `cdk.context.json`
+- `cdk.out`
 - `*.template.json`
 - `*.assets.json`
+
+**User files** (never deleted):
+
+- Any file/directory not starting with `asset.`
+- Examples: `my-notes.txt`, `debug/`, etc.
+
+### Protection Policy
+
+`asset.*` files/directories are **protected** from deletion if they meet **any** of these criteria:
+
+1. **Active References**: Referenced in `manifest.json` or `*.assets.json` files
+2. **Recent Modifications**: Modified within the last N hours (when using `--keep-hours`)
 
 ## Use Cases
 

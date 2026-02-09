@@ -44,19 +44,13 @@ function collectActivePaths(obj: unknown, basePath: string, collected: Set<strin
 }
 
 /**
- * Parse *.assets.json files and collect asset paths with stack information
+ * Parse *.assets.json files and collect asset paths
  */
-async function collectAssetPaths(
-  outdir: string,
-  activePaths: Set<string>,
-  assetToStacksMap: Map<string, Set<string>>,
-): Promise<void> {
+async function collectAssetPaths(outdir: string, activePaths: Set<string>): Promise<void> {
   const items = await fs.readdir(outdir);
   const assetFiles = items.filter((item) => item.endsWith(".assets.json"));
 
   for (const assetFile of assetFiles) {
-    const stackName = assetFile.replace(".assets.json", "");
-
     try {
       const content = await fs.readFile(path.join(outdir, assetFile), "utf-8");
       const assets = JSON.parse(content);
@@ -68,10 +62,6 @@ async function collectAssetPaths(
           if (entry.source?.path) {
             const assetPath = path.join(outdir, entry.source.path);
             activePaths.add(assetPath);
-            if (!assetToStacksMap.has(assetPath)) {
-              assetToStacksMap.set(assetPath, new Set());
-            }
-            assetToStacksMap.get(assetPath)!.add(stackName);
           }
         }
       }
@@ -83,10 +73,6 @@ async function collectAssetPaths(
           if (entry.source?.directory) {
             const assetPath = path.join(outdir, entry.source.directory);
             activePaths.add(assetPath);
-            if (!assetToStacksMap.has(assetPath)) {
-              assetToStacksMap.set(assetPath, new Set());
-            }
-            assetToStacksMap.get(assetPath)!.add(stackName);
           }
         }
       }
@@ -98,14 +84,11 @@ async function collectAssetPaths(
 }
 
 /**
- * Parse manifest file and get active paths with asset-to-stacks mapping
+ * Parse manifest file and get active paths
  */
-async function getActivePathsFromManifest(
-  outdir: string,
-): Promise<{ activePaths: Set<string>; assetToStacksMap: Map<string, Set<string>> }> {
+async function getActivePathsFromManifest(outdir: string): Promise<Set<string>> {
   const manifestPath = path.join(outdir, "manifest.json");
   const activePaths = new Set<string>();
-  const assetToStacksMap = new Map<string, Set<string>>();
 
   try {
     const content = await fs.readFile(manifestPath, "utf-8");
@@ -114,14 +97,14 @@ async function getActivePathsFromManifest(
     collectActivePaths(manifest, outdir, activePaths);
 
     // Also collect paths from *.assets.json files
-    await collectAssetPaths(outdir, activePaths, assetToStacksMap);
+    await collectAssetPaths(outdir, activePaths);
   } catch (error) {
     throw new Error(
       `Failed to read manifest.json: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
 
-  return { activePaths, assetToStacksMap };
+  return activePaths;
 }
 
 /**
@@ -129,7 +112,6 @@ async function getActivePathsFromManifest(
  */
 async function isProtected(
   itemPath: string,
-  outdir: string,
   activePaths: Set<string>,
   keepHours: number,
 ): Promise<boolean> {
@@ -217,7 +199,7 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
   }
 
   // Collect paths referenced in manifest
-  const { activePaths, assetToStacksMap } = await getActivePathsFromManifest(outdir);
+  const activePaths = await getActivePathsFromManifest(outdir);
 
   // Scan directory items
   const entries = await fs.readdir(outdir);
@@ -232,7 +214,7 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
         return;
       }
 
-      if (await isProtected(itemPath, outdir, activePaths, keepHours)) {
+      if (await isProtected(itemPath, activePaths, keepHours)) {
         return;
       }
 
