@@ -10,7 +10,7 @@
 - Recently modified files (configurable retention period)
 - Essential metadata files (`manifest.json`, `tree.json`, `*.template.json`, etc.)
 
-This helps optimize storage, maintain incremental builds, and streamline CI/CD caching.
+This helps optimize storage and streamline CI/CD caching.
 
 ## Why?
 
@@ -27,7 +27,6 @@ This helps optimize storage, maintain incremental builds, and streamline CI/CD c
 
 - **Manifest-based protection**: Only removes assets not referenced by the current configuration
 - **Time-based protection**: Keeps recent assets for quick rollbacks
-- **Incremental build preservation**: Avoids unnecessary rebuilds (esbuild, Docker, etc.)
 
 ### Background
 
@@ -151,7 +150,6 @@ All file operations use `Promise.all()` for concurrent execution and optimal per
 
 - **Non-destructive by default**: Use `-d/--dry-run` to preview before actual deletion
 - **Conservative protection**: Keeps all CDK metadata files
-- **Incremental-build friendly**: Won't trigger unnecessary rebuilds
 - **Rollback support**: Use `-k/--keep-hours` to maintain recent history
 
 ## Requirements
