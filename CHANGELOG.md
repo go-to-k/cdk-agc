@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/go-to-k/cdk-agc/compare/v1.0.0...v1.0.1) (2026-02-09)
+
+
+### Bug Fixes
+
+* cli version ([#3](https://github.com/go-to-k/cdk-agc/issues/3)) ([10fa1d5](https://github.com/go-to-k/cdk-agc/commit/10fa1d543805336265a3ebadde5d2d3d350f4f58))
+
 # 1.0.0 (2026-02-09)
 
 
