@@ -321,4 +321,76 @@ describe("cleanupAssets", () => {
     expect(await fileExists("debug.log")).toBe(true);
     expect(await fileExists("temp-data/data.json")).toBe(true);
   });
+
+  it("should handle negative keepHours (treat as 0)", async () => {
+    await createTestManifest();
+    await createTestFile("asset.old/file.txt", "old file");
+
+    await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: -1 });
+
+    // Negative value should be treated as no time-based protection
+    expect(await fileExists("asset.old")).toBe(false);
+  });
+
+  it("should handle very large keepHours value", async () => {
+    await createTestManifest();
+    await createTestFile("asset.recent/file.txt", "recent file");
+
+    await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 99999 });
+
+    // Very large value should protect all recent files
+    expect(await fileExists("asset.recent/file.txt")).toBe(true);
+  });
+
+  it("should handle fractional keepHours value", async () => {
+    await createTestManifest();
+    await createTestFile("asset.verynew/file.txt", "very new file");
+
+    // 0.001 hours = 3.6 seconds
+    await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0.001 });
+
+    // File created just now should be protected
+    expect(await fileExists("asset.verynew/file.txt")).toBe(true);
+  });
+
+  it("should delete assets older than keepHours and protect newer ones", async () => {
+    await createTestManifest();
+
+    // Create assets with different ages
+    const oldAssetPath = path.join(TEST_DIR, "asset.old");
+    const newAssetPath = path.join(TEST_DIR, "asset.new");
+    const boundaryAssetPath = path.join(TEST_DIR, "asset.boundary");
+
+    await fs.mkdir(oldAssetPath, { recursive: true });
+    await fs.writeFile(path.join(oldAssetPath, "file.txt"), "old content");
+
+    await fs.mkdir(newAssetPath, { recursive: true });
+    await fs.writeFile(path.join(newAssetPath, "file.txt"), "new content");
+
+    await fs.mkdir(boundaryAssetPath, { recursive: true });
+    await fs.writeFile(path.join(boundaryAssetPath, "file.txt"), "boundary content");
+
+    // Set modification times relative to when cleanup will run
+    // Add buffer to account for test execution time
+    const now = Date.now();
+    const fourHoursAgo = now - 4 * 60 * 60 * 1000; // 4 hours ago
+    const twoHoursAgo = now - 2 * 60 * 60 * 1000; // 2 hours ago
+    const threeHoursAgo = now - 3 * 60 * 60 * 1000 + 100; // Just under 3 hours ago
+
+    await fs.utimes(oldAssetPath, new Date(fourHoursAgo), new Date(fourHoursAgo));
+    await fs.utimes(newAssetPath, new Date(twoHoursAgo), new Date(twoHoursAgo));
+    await fs.utimes(boundaryAssetPath, new Date(threeHoursAgo), new Date(threeHoursAgo));
+
+    // Clean with keepHours: 3
+    await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 3 });
+
+    // Asset older than 3 hours should be deleted
+    expect(await fileExists("asset.old")).toBe(false);
+
+    // Asset newer than 3 hours should be protected
+    expect(await fileExists("asset.new")).toBe(true);
+
+    // Asset exactly at 3 hours boundary should be protected (<=)
+    expect(await fileExists("asset.boundary")).toBe(true);
+  });
 });
