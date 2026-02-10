@@ -34,11 +34,14 @@ pnpm synth
 # View cdk.out structure (will have asset-* directories)
 ls -la cdk.out/
 
+# Build the CLI first (from parent directory)
+cd .. && pnpm build && cd test-cdk
+
 # Dry-run cleanup
-node ../src/cli.ts -d
+node ../dist/cli.mjs -d
 
 # Actual cleanup
-node ../src/cli.ts
+node ../dist/cli.mjs
 
 # Verify CDK still works
 pnpm synth
@@ -56,17 +59,20 @@ pnpm synth
 ## Test Details
 
 ### Test 1: Basic Cleanup
+
 - Generates CDK assets
 - Adds dummy unused files
 - Verifies cdk-agc removes only unused files
 - Confirms CDK still works after cleanup
 
 ### Test 2: Multiple Synths
+
 - Simulates multiple `cdk synth` runs
 - Tests cleanup of old assets
 - Verifies only current assets are kept
 
 ### Test 3: Keep Hours Option
+
 - Tests `--keep-hours` protection
 - Verifies recent files are protected
 - Confirms cleanup works without protection
