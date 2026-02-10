@@ -7,12 +7,11 @@
 `cdk-agc` is a fast CLI tool that scans your AWS CDK cloud assembly directory and helps you reclaim disk space:
 
 - **Clean `cdk.out` directories**: Remove unused assets while protecting referenced files
-  - Protects assets referenced in `*.assets.json` files
+  - Only deletes unreferenced `asset.*` directories - all other files are automatically protected
   - Protects recently modified files (configurable with `-k/--keep-hours`)
-  - Protects essential metadata files (`manifest.json`, `tree.json`, `*.template.json`, etc.)
 
 - **Clean temporary directories** (`-t/--cleanup-tmp`): Delete accumulated temporary CDK directories in `$TMPDIR`
-  - Deletes entire directories (no manifest checking)
+  - Deletes entire directories
   - Only time-based protection with `-k/--keep-hours`
 
 This helps optimize storage and streamline CI/CD caching.
@@ -148,7 +147,7 @@ npx cdk-agc -o ./apps/web/cdk.out
 
 CDK creates temporary directories in `$TMPDIR` during synthesis (directories starting with `cdk.out`, `cdk-`, or `.cdk`), which can accumulate over time. Use `-t/--cleanup-tmp` to reclaim disk space.
 
-**Note**: This option deletes entire directories, not individual assets. Time-based protection with `-k/--keep-hours` is the only protection applied.
+**Note**: This option deletes entire directories. Time-based protection with `-k/--keep-hours` is the only protection applied.
 
 ```bash
 # Clean all temporary CDK directories (dry-run first)

@@ -13,107 +13,58 @@ export interface TempCleanupOptions {
   keepHours: number;
 }
 
-interface ManifestArtifact {
-  type: string;
-  properties?: {
-    file?: string;
-    templateFile?: string;
-    [key: string]: unknown;
-  };
-  [key: string]: unknown;
-}
-
-interface Manifest {
-  version: string;
-  artifacts?: Record<string, ManifestArtifact>;
-}
-
 /**
- * Recursively collect all paths referenced in the manifest
+ * Recursively collect asset paths from *.assets.json files
  */
-function collectActivePaths(obj: unknown, basePath: string, collected: Set<string>): void {
-  if (typeof obj === "string") {
-    const fullPath = path.join(basePath, obj);
-    collected.add(fullPath);
-    // Also protect parent directories
-    let parent = path.dirname(fullPath);
-    while (parent !== basePath && parent !== ".") {
-      collected.add(parent);
-      parent = path.dirname(parent);
-    }
-  } else if (Array.isArray(obj)) {
-    obj.forEach((item) => collectActivePaths(item, basePath, collected));
-  } else if (obj && typeof obj === "object") {
-    Object.values(obj).forEach((value) => collectActivePaths(value, basePath, collected));
-  }
-}
-
-/**
- * Parse *.assets.json files and collect asset paths (recursively)
- */
-async function collectAssetPaths(outdir: string, activePaths: Set<string>): Promise<void> {
-  const items = await fs.readdir(outdir, { withFileTypes: true });
+async function collectAssetPaths(dirPath: string): Promise<Set<string>> {
+  const activePaths = new Set<string>();
+  const items = await fs.readdir(dirPath, { withFileTypes: true });
 
   for (const item of items) {
-    const itemPath = path.join(outdir, item.name);
+    const itemPath = path.join(dirPath, item.name);
 
+    // Recursively scan subdirectories (e.g., assembly-MyStage/)
     if (item.isDirectory()) {
-      // Recursively scan subdirectories (e.g., assembly-MyStage/)
-      await collectAssetPaths(itemPath, activePaths);
-    } else if (item.name.endsWith(".assets.json")) {
-      // Parse assets.json file
-      try {
-        const content = await fs.readFile(itemPath, "utf-8");
-        const assets = JSON.parse(content);
-
-        // Collect asset paths from files object
-        if (assets.files) {
-          for (const fileEntry of Object.values(assets.files)) {
-            const entry = fileEntry as { source?: { path?: string } };
-            if (entry.source?.path) {
-              const assetPath = path.join(outdir, entry.source.path);
-              activePaths.add(assetPath);
-            }
-          }
-        }
-
-        // Collect asset paths from dockerImages object
-        if (assets.dockerImages) {
-          for (const imageEntry of Object.values(assets.dockerImages)) {
-            const entry = imageEntry as { source?: { directory?: string } };
-            if (entry.source?.directory) {
-              const assetPath = path.join(outdir, entry.source.directory);
-              activePaths.add(assetPath);
-            }
-          }
-        }
-      } catch (error) {
-        // Skip malformed asset files
-        console.warn(`Warning: Failed to parse ${item.name}:`, error);
-      }
+      const subPaths = await collectAssetPaths(itemPath);
+      subPaths.forEach((p) => activePaths.add(p));
+      continue;
     }
-  }
-}
 
-/**
- * Parse manifest file and get active paths
- */
-async function getActivePathsFromManifest(outdir: string): Promise<Set<string>> {
-  const manifestPath = path.join(outdir, "manifest.json");
-  const activePaths = new Set<string>();
+    // Only process *.assets.json files
+    if (!item.name.endsWith(".assets.json")) {
+      continue;
+    }
 
-  try {
-    const content = await fs.readFile(manifestPath, "utf-8");
-    const manifest: Manifest = JSON.parse(content);
+    // Parse assets.json file
+    try {
+      const content = await fs.readFile(itemPath, "utf-8");
+      const assets = JSON.parse(content);
 
-    collectActivePaths(manifest, outdir, activePaths);
+      // Collect asset paths from files object
+      if (assets.files) {
+        for (const fileEntry of Object.values(assets.files)) {
+          const entry = fileEntry as { source?: { path?: string } };
+          if (entry.source?.path) {
+            const assetPath = path.join(path.dirname(itemPath), entry.source.path);
+            activePaths.add(assetPath);
+          }
+        }
+      }
 
-    // Also collect paths from *.assets.json files
-    await collectAssetPaths(outdir, activePaths);
-  } catch (error) {
-    throw new Error(
-      `Failed to read manifest.json: ${error instanceof Error ? error.message : String(error)}`,
-    );
+      // Collect asset paths from dockerImages object
+      if (assets.dockerImages) {
+        for (const imageEntry of Object.values(assets.dockerImages)) {
+          const entry = imageEntry as { source?: { directory?: string } };
+          if (entry.source?.directory) {
+            const assetPath = path.join(path.dirname(itemPath), entry.source.directory);
+            activePaths.add(assetPath);
+          }
+        }
+      }
+    } catch (error) {
+      // Skip malformed asset files
+      console.warn(`Warning: Failed to parse ${item.name}:`, error);
+    }
   }
 
   return activePaths;
@@ -127,7 +78,7 @@ async function isProtected(
   activePaths: Set<string>,
   keepHours: number,
 ): Promise<boolean> {
-  // Protect paths referenced in manifest
+  // Protect assets referenced in *.assets.json files
   if (activePaths.has(itemPath)) {
     return true;
   }
@@ -201,7 +152,7 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
   const { outdir, dryRun, keepHours } = options;
 
   console.log(`Scanning ${outdir}...`);
-  console.log(`Protection policy: Active manifest + files modified within ${keepHours} hours\n`);
+  console.log(`Protection policy: Referenced assets + files modified within ${keepHours} hours\n`);
 
   // Check directory exists
   try {
@@ -210,8 +161,8 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
     throw new Error(`Directory not found: ${outdir}`);
   }
 
-  // Collect paths referenced in manifest
-  const activePaths = await getActivePathsFromManifest(outdir);
+  // Collect asset paths referenced in *.assets.json files
+  const activePaths = await collectAssetPaths(outdir);
 
   // Scan directory items
   const entries = await fs.readdir(outdir);
