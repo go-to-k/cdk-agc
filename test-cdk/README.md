@@ -15,14 +15,16 @@ pnpm test
 
 ## Test Commands
 
+Run from the **root directory**:
+
 ```bash
-# Run all tests (recommended)
-pnpm test              # or pnpm run test:all
+# Run all integration tests (recommended)
+pnpm test:integ
 
 # Run individual tests
-pnpm run test:basic      # Test 1: Basic cleanup with Lambda assets
-pnpm run test:multiple   # Test 2: Multiple synths (old assets cleanup)
-pnpm run test:keep-hours # Test 3: Keep-hours option
+pnpm test:integ:basic      # Test 1: Basic cleanup with Lambda assets
+pnpm test:integ:multiple   # Test 2: Multiple synths (old assets cleanup)
+pnpm test:integ:keep-hours # Test 3: Keep-hours option
 ```
 
 ## Manual Testing
@@ -76,10 +78,3 @@ pnpm synth
 - Tests `--keep-hours` protection
 - Verifies recent files are protected
 - Confirms cleanup works without protection
-
-## Technology Stack
-
-- **TypeScript** - Type-safe CDK code
-- **pnpm** - Fast package manager
-- **Node.js** - Direct TypeScript execution with `--enable-source-maps`
-- **Apache-2.0** - License (matches main project)
