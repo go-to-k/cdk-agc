@@ -16,7 +16,8 @@ export interface TempCleanupOptions {
 /**
  * Recursively collect asset paths from *.assets.json files
  */
-async function collectAssetPaths(dirPath: string, activePaths: Set<string>): Promise<void> {
+async function collectAssetPaths(dirPath: string): Promise<Set<string>> {
+  const activePaths = new Set<string>();
   const items = await fs.readdir(dirPath, { withFileTypes: true });
 
   for (const item of items) {
@@ -24,7 +25,8 @@ async function collectAssetPaths(dirPath: string, activePaths: Set<string>): Pro
 
     // Recursively scan subdirectories (e.g., assembly-MyStage/)
     if (item.isDirectory()) {
-      await collectAssetPaths(itemPath, activePaths);
+      const subPaths = await collectAssetPaths(itemPath);
+      subPaths.forEach((p) => activePaths.add(p));
       continue;
     }
 
@@ -64,16 +66,6 @@ async function collectAssetPaths(dirPath: string, activePaths: Set<string>): Pro
       console.warn(`Warning: Failed to parse ${item.name}:`, error);
     }
   }
-}
-
-/**
- * Collect all protected asset paths
- */
-async function getActivePaths(outdir: string): Promise<Set<string>> {
-  const activePaths = new Set<string>();
-
-  // Collect asset paths from *.assets.json files
-  await collectAssetPaths(outdir, activePaths);
 
   return activePaths;
 }
@@ -86,7 +78,7 @@ async function isProtected(
   activePaths: Set<string>,
   keepHours: number,
 ): Promise<boolean> {
-  // Protect paths referenced in manifest
+  // Protect assets referenced in *.assets.json files
   if (activePaths.has(itemPath)) {
     return true;
   }
@@ -160,7 +152,7 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
   const { outdir, dryRun, keepHours } = options;
 
   console.log(`Scanning ${outdir}...`);
-  console.log(`Protection policy: Active manifest + files modified within ${keepHours} hours\n`);
+  console.log(`Protection policy: Referenced assets + files modified within ${keepHours} hours\n`);
 
   // Check directory exists
   try {
@@ -169,8 +161,8 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
     throw new Error(`Directory not found: ${outdir}`);
   }
 
-  // Collect paths referenced in manifest
-  const activePaths = await getActivePaths(outdir);
+  // Collect asset paths referenced in *.assets.json files
+  const activePaths = await collectAssetPaths(outdir);
 
   // Scan directory items
   const entries = await fs.readdir(outdir);
