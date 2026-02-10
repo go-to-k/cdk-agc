@@ -22,7 +22,7 @@
   "scripts": {
     "build": "tsdown",
     "dev": "tsdown --watch",
-    "lint": "oxlint --type-aware src",
+    "lint": "oxlint --type-aware --type-check src",
     "format": "oxfmt src",
     "format:check": "oxfmt --check src",
     "test": "vitest run",
