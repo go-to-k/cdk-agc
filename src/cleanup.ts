@@ -16,49 +16,52 @@ export interface TempCleanupOptions {
 /**
  * Recursively collect asset paths from *.assets.json files
  */
-async function collectAssetPaths(
-  dirPath: string,
-  activePaths: Set<string>,
-): Promise<void> {
+async function collectAssetPaths(dirPath: string, activePaths: Set<string>): Promise<void> {
   const items = await fs.readdir(dirPath, { withFileTypes: true });
 
   for (const item of items) {
     const itemPath = path.join(dirPath, item.name);
 
+    // Recursively scan subdirectories (e.g., assembly-MyStage/)
     if (item.isDirectory()) {
-      // Recursively scan subdirectories (e.g., assembly-MyStage/)
       await collectAssetPaths(itemPath, activePaths);
-    } else if (item.name.endsWith(".assets.json")) {
-      // Parse assets.json file
-      try {
-        const content = await fs.readFile(itemPath, "utf-8");
-        const assets = JSON.parse(content);
+      continue;
+    }
 
-        // Collect asset paths from files object
-        if (assets.files) {
-          for (const fileEntry of Object.values(assets.files)) {
-            const entry = fileEntry as { source?: { path?: string } };
-            if (entry.source?.path) {
-              const assetPath = path.join(path.dirname(itemPath), entry.source.path);
-              activePaths.add(assetPath);
-            }
+    // Only process *.assets.json files
+    if (!item.name.endsWith(".assets.json")) {
+      continue;
+    }
+
+    // Parse assets.json file
+    try {
+      const content = await fs.readFile(itemPath, "utf-8");
+      const assets = JSON.parse(content);
+
+      // Collect asset paths from files object
+      if (assets.files) {
+        for (const fileEntry of Object.values(assets.files)) {
+          const entry = fileEntry as { source?: { path?: string } };
+          if (entry.source?.path) {
+            const assetPath = path.join(path.dirname(itemPath), entry.source.path);
+            activePaths.add(assetPath);
           }
         }
-
-        // Collect asset paths from dockerImages object
-        if (assets.dockerImages) {
-          for (const imageEntry of Object.values(assets.dockerImages)) {
-            const entry = imageEntry as { source?: { directory?: string } };
-            if (entry.source?.directory) {
-              const assetPath = path.join(path.dirname(itemPath), entry.source.directory);
-              activePaths.add(assetPath);
-            }
-          }
-        }
-      } catch (error) {
-        // Skip malformed asset files
-        console.warn(`Warning: Failed to parse ${item.name}:`, error);
       }
+
+      // Collect asset paths from dockerImages object
+      if (assets.dockerImages) {
+        for (const imageEntry of Object.values(assets.dockerImages)) {
+          const entry = imageEntry as { source?: { directory?: string } };
+          if (entry.source?.directory) {
+            const assetPath = path.join(path.dirname(itemPath), entry.source.directory);
+            activePaths.add(assetPath);
+          }
+        }
+      }
+    } catch (error) {
+      // Skip malformed asset files
+      console.warn(`Warning: Failed to parse ${item.name}:`, error);
     }
   }
 }
