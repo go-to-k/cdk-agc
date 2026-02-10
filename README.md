@@ -7,7 +7,7 @@
 `cdk-agc` is a fast CLI tool that scans your AWS CDK cloud assembly directory and helps you reclaim disk space:
 
 - **Clean `cdk.out` directories**: Remove unused assets while protecting referenced files
-  - Protects assets referenced in `manifest.json` or `*.assets.json`
+  - Protects assets referenced in `*.assets.json` files
   - Protects recently modified files (configurable with `-k/--keep-hours`)
   - Protects essential metadata files (`manifest.json`, `tree.json`, `*.template.json`, etc.)
 
@@ -30,7 +30,7 @@ This helps optimize storage and streamline CI/CD caching.
 
 `cdk-agc` provides safe, intelligent cleanup with:
 
-- **Manifest-based protection**: Only removes assets not referenced by the current configuration
+- **Reference-based protection**: Only removes assets not referenced in `*.assets.json` files
 - **Time-based protection**: Keeps recent assets for quick rollbacks
 
 ## Installation
@@ -52,7 +52,7 @@ npm install -g cdk-agc
 ### Basic Examples
 
 ```bash
-# Default: Clean cdk.out, keeping only active manifest assets
+# Default: Clean cdk.out, keeping only referenced assets
 npx cdk-agc
 
 # Dry-run: Preview what would be deleted
@@ -106,7 +106,7 @@ npx cdk-agc -t
 
 `asset.*` files/directories are **protected** from deletion if they meet **any** of these criteria:
 
-1. **Active References**: Referenced in `manifest.json` or `*.assets.json` files
+1. **Active References**: Referenced in `*.assets.json` files
 2. **Recent Modifications**: Modified within the last N hours (when using `-k/--keep-hours`)
 
 ## Use Cases
