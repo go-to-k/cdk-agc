@@ -324,14 +324,12 @@ export async function cleanupTempDirectories(options: TempCleanupOptions): Promi
   }
 
   let totalCleaned = 0;
-  let totalProtected = 0;
   let totalSize = 0;
 
   for (const dir of directories) {
     try {
       // Check if directory should be protected by age
       if (await shouldProtectDirectory(dir, keepHours)) {
-        totalProtected++;
         continue;
       }
 
@@ -344,7 +342,7 @@ export async function cleanupTempDirectories(options: TempCleanupOptions): Promi
       }
 
       totalCleaned++;
-    } catch (error) {
+    } catch {
       // Silently continue on error
       continue;
     }
