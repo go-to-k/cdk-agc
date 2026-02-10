@@ -38,29 +38,40 @@ describe("cleanupAssets", () => {
     await fs.rm(TEST_DIR, { recursive: true, force: true });
   });
 
-  it("should protect manifest-referenced files and essential metadata", async () => {
+  it("should protect assets and essential metadata files", async () => {
     await createTestManifest({
+      "MyStack.assets": {
+        type: "cdk:asset-manifest",
+        properties: {
+          file: "MyStack.assets.json",
+        },
+      },
       MyStack: {
         type: "aws:cloudformation:stack",
         properties: {
           templateFile: "MyStack.template.json",
         },
-        metadata: {
-          "/MyStack": [
-            {
-              type: "aws:cdk:asset",
-              data: {
-                path: "asset.abc123",
-              },
-            },
-          ],
-        },
       },
     });
+
+    // Create assets.json with asset reference
+    const assetsJson = {
+      version: "1.0.0",
+      files: {
+        abc123: {
+          source: {
+            path: "asset.abc123",
+            packaging: "zip",
+          },
+          destinations: {},
+        },
+      },
+    };
+
     await createTestFile("MyStack.template.json", "{}");
+    await createTestFile("MyStack.assets.json", JSON.stringify(assetsJson, null, 2));
     await createTestFile("tree.json", "{}");
     await createTestFile("cdk.out", "");
-    await createTestFile("OtherStack.assets.json", "{}");
     await createTestFile("asset.abc123/index.js", "console.log('protected')");
     await createTestFile("asset.unused/file.txt", "delete me");
 
@@ -68,9 +79,9 @@ describe("cleanupAssets", () => {
 
     expect(await fileExists("manifest.json")).toBe(true);
     expect(await fileExists("MyStack.template.json")).toBe(true);
+    expect(await fileExists("MyStack.assets.json")).toBe(true);
     expect(await fileExists("tree.json")).toBe(true);
     expect(await fileExists("cdk.out")).toBe(true);
-    expect(await fileExists("OtherStack.assets.json")).toBe(true);
     expect(await fileExists("asset.abc123/index.js")).toBe(true);
     expect(await fileExists("asset.unused")).toBe(false);
   });
@@ -131,12 +142,6 @@ describe("cleanupAssets", () => {
     expect(await fileExists("asset.unused-dir")).toBe(false);
   });
 
-  it("should throw error if manifest.json is missing", async () => {
-    await expect(cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 })).rejects.toThrow(
-      "Failed to read manifest.json",
-    );
-  });
-
   it("should throw error if directory does not exist", async () => {
     await expect(
       cleanupAssets({ outdir: "/non-existent-dir", dryRun: false, keepHours: 0 }),
@@ -149,6 +154,33 @@ describe("cleanupAssets", () => {
     await expect(
       cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 }),
     ).resolves.not.toThrow();
+  });
+
+  it("should work without manifest.json", async () => {
+    // Create assets.json and asset without manifest.json
+    const assetsJson = {
+      version: "1.0.0",
+      files: {
+        abc123: {
+          source: {
+            path: "asset.abc123",
+            packaging: "zip",
+          },
+          destinations: {},
+        },
+      },
+    };
+
+    await createTestFile("Stack.assets.json", JSON.stringify(assetsJson, null, 2));
+    await createTestFile("asset.abc123/index.js", "console.log('abc')");
+    await createTestFile("asset.unused/old.txt", "delete me");
+
+    await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 });
+
+    // Referenced asset should be protected
+    expect(await fileExists("asset.abc123/index.js")).toBe(true);
+    // Unreferenced asset should be deleted
+    expect(await fileExists("asset.unused")).toBe(false);
   });
 
   it("should protect assets referenced in *.assets.json files", async () => {
