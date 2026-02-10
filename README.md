@@ -146,7 +146,7 @@ npx cdk-agc -o ./apps/web/cdk.out
 
 ### Clean Temporary Directories
 
-CDK creates temporary directories in `$TMPDIR` during synthesis (directories starting with `cdk.out`, `cdk-`, or `.cdk`), which can accumulate over time (especially after failed synths or interruptions). Use `-t/--cleanup-tmp` to reclaim disk space.
+CDK creates temporary directories in `$TMPDIR` during synthesis (directories starting with `cdk.out`, `cdk-`, or `.cdk`), which can accumulate over time. Use `-t/--cleanup-tmp` to reclaim disk space.
 
 **Note**: This option deletes entire directories, not individual assets. Time-based protection with `-k/--keep-hours` is the only protection applied.
 
