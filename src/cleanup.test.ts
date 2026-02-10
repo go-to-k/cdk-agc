@@ -38,38 +38,40 @@ describe("cleanupAssets", () => {
     await fs.rm(TEST_DIR, { recursive: true, force: true });
   });
 
-  it("should protect files referenced in manifest", async () => {
+  it("should protect manifest-referenced files and essential metadata", async () => {
     await createTestManifest({
       MyStack: {
         type: "aws:cloudformation:stack",
         properties: {
           templateFile: "MyStack.template.json",
         },
+        metadata: {
+          "/MyStack": [
+            {
+              type: "aws:cdk:asset",
+              data: {
+                path: "asset.abc123",
+              },
+            },
+          ],
+        },
       },
     });
     await createTestFile("MyStack.template.json", "{}");
+    await createTestFile("tree.json", "{}");
+    await createTestFile("cdk.out", "");
+    await createTestFile("OtherStack.assets.json", "{}");
+    await createTestFile("asset.abc123/index.js", "console.log('protected')");
     await createTestFile("asset.unused/file.txt", "delete me");
 
     await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 });
 
     expect(await fileExists("manifest.json")).toBe(true);
     expect(await fileExists("MyStack.template.json")).toBe(true);
-    expect(await fileExists("asset.unused")).toBe(false);
-  });
-
-  it("should protect essential metadata files", async () => {
-    await createTestManifest();
-    await createTestFile("tree.json", "{}");
-    await createTestFile("cdk.out", "");
-    await createTestFile("Stack.assets.json", "{}");
-    await createTestFile("asset.unused/file.txt", "delete me");
-
-    await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 });
-
-    expect(await fileExists("manifest.json")).toBe(true);
     expect(await fileExists("tree.json")).toBe(true);
     expect(await fileExists("cdk.out")).toBe(true);
-    expect(await fileExists("Stack.assets.json")).toBe(true);
+    expect(await fileExists("OtherStack.assets.json")).toBe(true);
+    expect(await fileExists("asset.abc123/index.js")).toBe(true);
     expect(await fileExists("asset.unused")).toBe(false);
   });
 
@@ -93,21 +95,39 @@ describe("cleanupAssets", () => {
     expect(await fileExists("asset.recent/file.txt")).toBe(true);
   });
 
-  it("should handle nested paths in manifest", async () => {
+  it("should protect nested stack template files", async () => {
     await createTestManifest({
-      MyStack: {
+      "CdkSampleStack.assets": {
+        type: "cdk:asset-manifest",
+        properties: {
+          file: "CdkSampleStack.assets.json",
+        },
+      },
+      CdkSampleStack: {
         type: "aws:cloudformation:stack",
         properties: {
-          file: "assembly-MyStack/MyStack.template.json",
+          templateFile: "CdkSampleStack.template.json",
+        },
+        metadata: {
+          "/CdkSampleStack/MyNestedStack.NestedStack/MyNestedStack.NestedStackResource": [
+            {
+              type: "aws:cdk:logicalId",
+              data: "MyNestedStackNestedStackMyNestedStackNestedStackResource9C617903",
+            },
+          ],
         },
       },
     });
-    await createTestFile("assembly-MyStack/MyStack.template.json", "{}");
+    await createTestFile("CdkSampleStack.template.json", "{}");
+    await createTestFile("CdkSampleStack.assets.json", "{}");
+    await createTestFile("CdkSampleStackMyNestedStackEC13F2A2.nested.template.json", "{}");
     await createTestFile("asset.unused-dir/file.txt", "delete me");
 
     await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 });
 
-    expect(await fileExists("assembly-MyStack/MyStack.template.json")).toBe(true);
+    expect(await fileExists("CdkSampleStack.template.json")).toBe(true);
+    expect(await fileExists("CdkSampleStack.assets.json")).toBe(true);
+    expect(await fileExists("CdkSampleStackMyNestedStackEC13F2A2.nested.template.json")).toBe(true);
     expect(await fileExists("asset.unused-dir")).toBe(false);
   });
 
@@ -394,36 +414,62 @@ describe("cleanupAssets", () => {
   });
 
   it("should protect assets referenced in nested assembly directories", async () => {
-    await createTestManifest();
+    await createTestManifest({
+      "assembly-MyStage": {
+        type: "cdk:cloud-assembly",
+        properties: {
+          directoryName: "assembly-MyStage",
+          displayName: "MyStage",
+        },
+      },
+    });
 
-    // Create nested assembly directory (e.g., Stages)
+    // Create nested assembly directory structure
+    await createTestFile("assembly-MyStage/cdk.out", "");
+    await createTestFile("assembly-MyStage/manifest.json", "{}");
+    await createTestFile("assembly-MyStage/MyStageCdkSampleStackC627666C.template.json", "{}");
+
+    // Create assets.json in nested assembly that references top-level asset with relative path
     const nestedAssetsJson = {
       version: "1.0.0",
       files: {
-        nestedAsset: {
+        asset1: {
           source: {
-            path: "../asset.nested123",
+            path: "../asset.1b74676f43a7db3c2b7b40ca7b8ae1cffa9314da05f888ba85f0e5bdbba35098",
             packaging: "zip",
           },
           destinations: {},
         },
       },
     };
-
-    await createTestFile("assembly-MyStage/manifest.json", JSON.stringify({ version: "1.0.0" }));
     await createTestFile(
-      "assembly-MyStage/Stack.assets.json",
+      "assembly-MyStage/MyStageCdkSampleStackC627666C.assets.json",
       JSON.stringify(nestedAssetsJson, null, 2),
     );
 
-    // Create assets
-    await createTestFile("asset.nested123/index.js", "console.log('nested')");
+    // Create assets at top level
+    await createTestFile(
+      "asset.1b74676f43a7db3c2b7b40ca7b8ae1cffa9314da05f888ba85f0e5bdbba35098/index.js",
+      "console.log('stage asset')",
+    );
     await createTestFile("asset.unused/old.txt", "delete me");
 
     await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 });
 
     // Asset referenced in nested assembly should be protected
-    expect(await fileExists("asset.nested123/index.js")).toBe(true);
+    expect(await fileExists("assembly-MyStage/cdk.out")).toBe(true);
+    expect(await fileExists("assembly-MyStage/manifest.json")).toBe(true);
+    expect(await fileExists("assembly-MyStage/MyStageCdkSampleStackC627666C.template.json")).toBe(
+      true,
+    );
+    expect(await fileExists("assembly-MyStage/MyStageCdkSampleStackC627666C.assets.json")).toBe(
+      true,
+    );
+    expect(
+      await fileExists(
+        "asset.1b74676f43a7db3c2b7b40ca7b8ae1cffa9314da05f888ba85f0e5bdbba35098/index.js",
+      ),
+    ).toBe(true);
 
     // Unreferenced asset should be deleted
     expect(await fileExists("asset.unused")).toBe(false);
