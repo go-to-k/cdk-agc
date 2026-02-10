@@ -531,7 +531,7 @@ describe("cleanupTempDirectories", () => {
     os.tmpdir = () => TEST_TMPDIR;
 
     try {
-      const recentDir = await createTempCdkDir("cdk-recent", false, false);
+      await createTempCdkDir("cdk-recent", false, false);
       const oldDir = await createTempCdkDir("cdk-old", false, false);
 
       // Set old directory to 5 hours ago
