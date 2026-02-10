@@ -4,9 +4,14 @@
 
 ## Overview
 
-`cdk-agc` is a fast CLI tool that scans your AWS CDK cloud assembly directory (default: `cdk.out`) and removes unused assets while protecting:
+`cdk-agc` is a fast CLI tool that scans your AWS CDK cloud assembly directory and helps you reclaim disk space:
 
-- Assets referenced in the latest `manifest.json`
+- **Clean `cdk.out` directories**: Remove unused assets while protecting referenced files
+- **Clean temporary directories**: Delete accumulated temporary CDK directories in `$TMPDIR` (can save GBs of disk space)
+
+Safe cleanup with intelligent protection:
+
+- Assets referenced in `manifest.json` or `*.assets.json`
 - Recently modified files (configurable retention period)
 - Essential metadata files (`manifest.json`, `tree.json`, `*.template.json`, etc.)
 
@@ -17,6 +22,7 @@ This helps optimize storage and streamline CI/CD caching.
 ### Problems
 
 - CDK asset directories can grow to multiple GBs over time
+- Temporary directories in `$TMPDIR` accumulate
 - Disk space exhaustion from accumulated build artifacts
 - Slow CI/CD pipelines due to large cache sizes
 - No official local cleanup tool (AWS CDK's `cdk gc` only handles cloud-side resources)
@@ -50,6 +56,9 @@ npm install -g cdk-agc
 # Default: Clean cdk.out, keeping only active manifest assets
 npx cdk-agc
 
+# Clean temporary directories in $TMPDIR (can save GBs)
+npx cdk-agc -t
+
 # Dry-run: Preview what would be deleted
 npx cdk-agc -d
 
@@ -67,6 +76,7 @@ npx cdk-agc -k 24
 | `-o, --outdir <path>` | CDK output directory to clean | `cdk.out` |
 | `-d, --dry-run` | Show what would be deleted without deleting | `false` |
 | `-k, --keep-hours <number>` | Protect files modified within N hours | `0` |
+| `-t, --cleanup-tmp` | Clean up all temporary CDK directories in `$TMPDIR` | `false` |
 | `-h, --help` | Display help | |
 | `-V, --version` | Display version | |
 
@@ -133,6 +143,23 @@ npx cdk-agc -k 1  # Keep last hour's assets for quick rollback
 # Clean multiple CDK projects
 npx cdk-agc -o ./apps/api/cdk.out
 npx cdk-agc -o ./apps/web/cdk.out
+```
+
+### Clean Temporary Directories
+
+CDK creates temporary directories in `$TMPDIR` during synthesis (directories starting with `cdk.out`, `cdk-`, or `.cdk`), which can accumulate over time (especially after failed synths or interruptions). Use `-t/--cleanup-tmp` to reclaim disk space.
+
+**Note**: This option deletes entire directories, not individual assets. Time-based protection with `-k/--keep-hours` is the only protection applied.
+
+```bash
+# Clean all temporary CDK directories (dry-run first)
+npx cdk-agc -t -d
+
+# Actually clean them
+npx cdk-agc -t
+
+# Protect recent directories (last 24 hours)
+npx cdk-agc -t -k 24
 ```
 
 ## Contributing
