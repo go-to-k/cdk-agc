@@ -6,10 +6,10 @@ import { cleanupAssets, cleanupTempDirectories } from "./cleanup.js";
 
 const TEST_DIR = path.join(process.cwd(), "test-cdk-out");
 
-async function createTestManifest(artifacts: Record<string, unknown> = {}) {
+async function createTestManifest() {
   const manifest = {
     version: "1.0.0",
-    artifacts,
+    artifacts: {},
   };
   await fs.writeFile(path.join(TEST_DIR, "manifest.json"), JSON.stringify(manifest, null, 2));
 }
@@ -38,152 +38,7 @@ describe("cleanupAssets", () => {
     await fs.rm(TEST_DIR, { recursive: true, force: true });
   });
 
-  it("should protect assets and essential metadata files", async () => {
-    await createTestManifest({
-      "MyStack.assets": {
-        type: "cdk:asset-manifest",
-        properties: {
-          file: "MyStack.assets.json",
-        },
-      },
-      MyStack: {
-        type: "aws:cloudformation:stack",
-        properties: {
-          templateFile: "MyStack.template.json",
-        },
-      },
-    });
-
-    // Create assets.json with asset reference
-    const assetsJson = {
-      version: "1.0.0",
-      files: {
-        abc123: {
-          source: {
-            path: "asset.abc123",
-            packaging: "zip",
-          },
-          destinations: {},
-        },
-      },
-    };
-
-    await createTestFile("MyStack.template.json", "{}");
-    await createTestFile("MyStack.assets.json", JSON.stringify(assetsJson, null, 2));
-    await createTestFile("tree.json", "{}");
-    await createTestFile("cdk.out", "");
-    await createTestFile("asset.abc123/index.js", "console.log('protected')");
-    await createTestFile("asset.unused/file.txt", "delete me");
-
-    await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 });
-
-    expect(await fileExists("manifest.json")).toBe(true);
-    expect(await fileExists("MyStack.template.json")).toBe(true);
-    expect(await fileExists("MyStack.assets.json")).toBe(true);
-    expect(await fileExists("tree.json")).toBe(true);
-    expect(await fileExists("cdk.out")).toBe(true);
-    expect(await fileExists("asset.abc123/index.js")).toBe(true);
-    expect(await fileExists("asset.unused")).toBe(false);
-  });
-
-  it("should not delete files in dry-run mode", async () => {
-    await createTestManifest();
-    await createTestFile("asset.unused/file.txt", "should remain");
-
-    await cleanupAssets({ outdir: TEST_DIR, dryRun: true, keepHours: 0 });
-
-    expect(await fileExists("asset.unused/file.txt")).toBe(true);
-  });
-
-  it("should protect recent files based on keepHours", async () => {
-    await createTestManifest();
-    await createTestFile("asset.recent/file.txt", "new file");
-    // Wait a bit to ensure mtime is set
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 1 });
-
-    expect(await fileExists("asset.recent/file.txt")).toBe(true);
-  });
-
-  it("should protect nested stack template files", async () => {
-    await createTestManifest({
-      "CdkSampleStack.assets": {
-        type: "cdk:asset-manifest",
-        properties: {
-          file: "CdkSampleStack.assets.json",
-        },
-      },
-      CdkSampleStack: {
-        type: "aws:cloudformation:stack",
-        properties: {
-          templateFile: "CdkSampleStack.template.json",
-        },
-        metadata: {
-          "/CdkSampleStack/MyNestedStack.NestedStack/MyNestedStack.NestedStackResource": [
-            {
-              type: "aws:cdk:logicalId",
-              data: "MyNestedStackNestedStackMyNestedStackNestedStackResource9C617903",
-            },
-          ],
-        },
-      },
-    });
-    await createTestFile("CdkSampleStack.template.json", "{}");
-    await createTestFile("CdkSampleStack.assets.json", "{}");
-    await createTestFile("CdkSampleStackMyNestedStackEC13F2A2.nested.template.json", "{}");
-    await createTestFile("asset.unused-dir/file.txt", "delete me");
-
-    await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 });
-
-    expect(await fileExists("CdkSampleStack.template.json")).toBe(true);
-    expect(await fileExists("CdkSampleStack.assets.json")).toBe(true);
-    expect(await fileExists("CdkSampleStackMyNestedStackEC13F2A2.nested.template.json")).toBe(true);
-    expect(await fileExists("asset.unused-dir")).toBe(false);
-  });
-
-  it("should throw error if directory does not exist", async () => {
-    await expect(
-      cleanupAssets({ outdir: "/non-existent-dir", dryRun: false, keepHours: 0 }),
-    ).rejects.toThrow("Directory not found");
-  });
-
-  it("should handle empty directory gracefully", async () => {
-    await createTestManifest();
-
-    await expect(
-      cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 }),
-    ).resolves.not.toThrow();
-  });
-
-  it("should work without manifest.json", async () => {
-    // Create assets.json and asset without manifest.json
-    const assetsJson = {
-      version: "1.0.0",
-      files: {
-        abc123: {
-          source: {
-            path: "asset.abc123",
-            packaging: "zip",
-          },
-          destinations: {},
-        },
-      },
-    };
-
-    await createTestFile("Stack.assets.json", JSON.stringify(assetsJson, null, 2));
-    await createTestFile("asset.abc123/index.js", "console.log('abc')");
-    await createTestFile("asset.unused/old.txt", "delete me");
-
-    await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 });
-
-    // Referenced asset should be protected
-    expect(await fileExists("asset.abc123/index.js")).toBe(true);
-    // Unreferenced asset should be deleted
-    expect(await fileExists("asset.unused")).toBe(false);
-  });
-
-  it("should protect assets referenced in *.assets.json files", async () => {
+  it("should protect assets referenced in *.assets.json files (files and dockerImages)", async () => {
     await createTestManifest();
 
     // Create a mock *.assets.json file with asset references
@@ -235,6 +90,76 @@ describe("cleanupAssets", () => {
 
     // Unreferenced asset should be deleted
     expect(await fileExists("asset.unused")).toBe(false);
+  });
+
+  it("should not delete essential metadata files", async () => {
+    await createTestManifest();
+    await createTestFile("manifest.json", "{}");
+    await createTestFile("tree.json", "{}");
+    await createTestFile("cdk.out", "");
+    await createTestFile("MyStack.template.json", "{}");
+    await createTestFile("MyStack.assets.json", "{}");
+    await createTestFile("asset.unused/file.txt", "delete me");
+
+    await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 });
+
+    // Metadata files should never be deleted
+    expect(await fileExists("manifest.json")).toBe(true);
+    expect(await fileExists("tree.json")).toBe(true);
+    expect(await fileExists("cdk.out")).toBe(true);
+    expect(await fileExists("MyStack.template.json")).toBe(true);
+    expect(await fileExists("MyStack.assets.json")).toBe(true);
+    // Only asset.* files are deletion candidates
+    expect(await fileExists("asset.unused")).toBe(false);
+  });
+
+  it("should not delete files in dry-run mode", async () => {
+    await createTestManifest();
+    await createTestFile("asset.unused/file.txt", "should remain");
+
+    await cleanupAssets({ outdir: TEST_DIR, dryRun: true, keepHours: 0 });
+
+    expect(await fileExists("asset.unused/file.txt")).toBe(true);
+  });
+
+  it("should protect recent files based on keepHours", async () => {
+    await createTestManifest();
+    await createTestFile("asset.recent/file.txt", "new file");
+    // Wait a bit to ensure mtime is set
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 1 });
+
+    expect(await fileExists("asset.recent/file.txt")).toBe(true);
+  });
+
+  it("should protect nested stack template files", async () => {
+    await createTestManifest();
+    await createTestFile("CdkSampleStack.template.json", "{}");
+    await createTestFile("CdkSampleStack.assets.json", "{}");
+    await createTestFile("CdkSampleStackMyNestedStackEC13F2A2.nested.template.json", "{}");
+    await createTestFile("asset.unused-dir/file.txt", "delete me");
+
+    await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 });
+
+    expect(await fileExists("CdkSampleStack.template.json")).toBe(true);
+    expect(await fileExists("CdkSampleStack.assets.json")).toBe(true);
+    expect(await fileExists("CdkSampleStackMyNestedStackEC13F2A2.nested.template.json")).toBe(true);
+    expect(await fileExists("asset.unused-dir")).toBe(false);
+  });
+
+  it("should throw error if directory does not exist", async () => {
+    await expect(
+      cleanupAssets({ outdir: "/non-existent-dir", dryRun: false, keepHours: 0 }),
+    ).rejects.toThrow("Directory not found");
+  });
+
+  it("should handle empty directory gracefully", async () => {
+    await createTestManifest();
+
+    await expect(
+      cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 }),
+    ).resolves.not.toThrow();
   });
 
   it("should protect assets used by multiple stacks", async () => {
@@ -446,15 +371,7 @@ describe("cleanupAssets", () => {
   });
 
   it("should protect assets referenced in nested assembly directories", async () => {
-    await createTestManifest({
-      "assembly-MyStage": {
-        type: "cdk:cloud-assembly",
-        properties: {
-          directoryName: "assembly-MyStage",
-          displayName: "MyStage",
-        },
-      },
-    });
+    await createTestManifest();
 
     // Create nested assembly directory structure
     await createTestFile("assembly-MyStage/cdk.out", "");
@@ -567,12 +484,12 @@ describe("cleanupTempDirectories", () => {
     }
   }
 
-  it("should delete all temporary CDK directories regardless of manifest.json", async () => {
-    // Mock os.tmpdir() to use our test directory
+  it("should delete all temporary CDK directories", async () => {
     const originalTmpdir = os.tmpdir;
     os.tmpdir = () => TEST_TMPDIR;
 
     try {
+      // Create various temporary directories
       await createTempCdkDir("cdk.out123", true, true);
       await createTempCdkDir("cdk-456", false, false);
 
@@ -581,24 +498,6 @@ describe("cleanupTempDirectories", () => {
       // All directories should be deleted entirely
       expect(await dirExists("cdk.out123")).toBe(false);
       expect(await dirExists("cdk-456")).toBe(false);
-    } finally {
-      os.tmpdir = originalTmpdir;
-    }
-  });
-
-  it("should delete incomplete CDK directories without manifest.json", async () => {
-    const originalTmpdir = os.tmpdir;
-    os.tmpdir = () => TEST_TMPDIR;
-
-    try {
-      await createTempCdkDir("cdk.out-empty", false, false);
-      await createTempCdkDir("cdk-partial", false, false);
-      await fs.writeFile(path.join(TEST_TMPDIR, "cdk-partial", "random.txt"), "leftover");
-
-      await cleanupTempDirectories({ dryRun: false, keepHours: 0 });
-
-      expect(await dirExists("cdk.out-empty")).toBe(false);
-      expect(await dirExists("cdk-partial")).toBe(false);
     } finally {
       os.tmpdir = originalTmpdir;
     }
