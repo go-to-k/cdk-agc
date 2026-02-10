@@ -25,7 +25,6 @@ This helps optimize storage and streamline CI/CD caching.
 - Temporary directories in `$TMPDIR` accumulate
 - Disk space exhaustion from accumulated build artifacts
 - Slow CI/CD pipelines due to large cache sizes
-- No official local cleanup tool (AWS CDK's `cdk gc` only handles cloud-side resources)
 
 ### Solution
 
