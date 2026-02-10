@@ -4,8 +4,8 @@ coverage/
 *.test.ts
 *.config.ts
 .github/
-.oxfmt.json
-oxlint.json
+.oxfmtrc.json
+.oxlintrc.json
 tsconfig.json
 pnpm-lock.yaml
 .DS_Store
