@@ -1,3 +1,6 @@
 packages:
-  - '.'
-  - 'test-cdk'
+  - .
+  - test-cdk
+
+onlyBuiltDependencies:
+  - esbuild
