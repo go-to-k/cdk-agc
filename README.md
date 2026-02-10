@@ -7,7 +7,7 @@
 `cdk-agc` is a fast CLI tool that scans your AWS CDK cloud assembly directory and helps you reclaim disk space:
 
 - **Clean `cdk.out` directories**: Remove unused assets while protecting referenced files
-- **Clean temporary directories**: Delete accumulated temporary CDK directories in `$TMPDIR` (can save GBs of disk space)
+- **Clean temporary directories**: Delete accumulated temporary CDK directories in `$TMPDIR`
 
 Safe cleanup with intelligent protection:
 
@@ -56,7 +56,7 @@ npm install -g cdk-agc
 # Default: Clean cdk.out, keeping only active manifest assets
 npx cdk-agc
 
-# Clean temporary directories in $TMPDIR (can save GBs)
+# Clean temporary directories in $TMPDIR
 npx cdk-agc -t
 
 # Dry-run: Preview what would be deleted
