@@ -133,7 +133,7 @@ git commit -m "feat: add support for custom manifest paths"
 - `feat:` New feature → **Minor version bump** (1.1.0 → 1.2.0)
 - `fix:` Bug fix → **Patch version bump** (1.1.0 → 1.1.1)
 - `feat!:` or `BREAKING CHANGE:` → **Major version bump** (1.1.0 → 2.0.0)
-- `docs:`, `style:`, `refactor:`, `test:`, `chore:` → No release
+- `docs:`, `style:`, `refactor:`, `test:`, `chore:`, `ci:` → No release
 
 **Examples:**
 
