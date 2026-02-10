@@ -272,7 +272,12 @@ async function findTempDirectories(): Promise<string[]> {
 
     for (const item of items) {
       // Match directories starting with "cdk.out", "cdk-", or ".cdk"
-      if (item.isDirectory() && (item.name.startsWith("cdk.out") || item.name.startsWith("cdk-") || item.name.startsWith(".cdk"))) {
+      if (
+        item.isDirectory() &&
+        (item.name.startsWith("cdk.out") ||
+          item.name.startsWith("cdk-") ||
+          item.name.startsWith(".cdk"))
+      ) {
         const dirPath = path.join(tmpdir, item.name);
         directories.push(dirPath);
       }

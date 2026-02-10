@@ -441,7 +441,11 @@ describe("cleanupTempDirectories", () => {
     await fs.rm(TEST_TMPDIR, { recursive: true, force: true });
   });
 
-  async function createTempCdkDir(name: string, withManifest: boolean, withAssets: boolean = false) {
+  async function createTempCdkDir(
+    name: string,
+    withManifest: boolean,
+    withAssets: boolean = false,
+  ) {
     const dirPath = path.join(TEST_TMPDIR, name);
     await fs.mkdir(dirPath, { recursive: true });
 
