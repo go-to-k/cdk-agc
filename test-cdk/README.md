@@ -15,14 +15,16 @@ pnpm test
 
 ## Test Commands
 
+Run from the **root directory**:
+
 ```bash
-# Run all tests (recommended)
-pnpm test              # or pnpm run test:all
+# Run all integration tests (recommended)
+pnpm test:integ
 
 # Run individual tests
-pnpm run test:basic      # Test 1: Basic cleanup with Lambda assets
-pnpm run test:multiple   # Test 2: Multiple synths (old assets cleanup)
-pnpm run test:keep-hours # Test 3: Keep-hours option
+pnpm test:integ:basic      # Test 1: Basic cleanup with Lambda assets
+pnpm test:integ:multiple   # Test 2: Multiple synths (old assets cleanup)
+pnpm test:integ:keep-hours # Test 3: Keep-hours option
 ```
 
 ## Manual Testing
@@ -34,11 +36,14 @@ pnpm synth
 # View cdk.out structure (will have asset-* directories)
 ls -la cdk.out/
 
+# Build the CLI first (from parent directory)
+cd .. && pnpm build && cd test-cdk
+
 # Dry-run cleanup
-node ../src/cli.ts -d
+node ../dist/cli.mjs -d
 
 # Actual cleanup
-node ../src/cli.ts
+node ../dist/cli.mjs
 
 # Verify CDK still works
 pnpm synth
@@ -56,24 +61,20 @@ pnpm synth
 ## Test Details
 
 ### Test 1: Basic Cleanup
+
 - Generates CDK assets
 - Adds dummy unused files
 - Verifies cdk-agc removes only unused files
 - Confirms CDK still works after cleanup
 
 ### Test 2: Multiple Synths
+
 - Simulates multiple `cdk synth` runs
 - Tests cleanup of old assets
 - Verifies only current assets are kept
 
 ### Test 3: Keep Hours Option
+
 - Tests `--keep-hours` protection
 - Verifies recent files are protected
 - Confirms cleanup works without protection
-
-## Technology Stack
-
-- **TypeScript** - Type-safe CDK code
-- **pnpm** - Fast package manager
-- **Node.js** - Direct TypeScript execution with `--enable-source-maps`
-- **Apache-2.0** - License (matches main project)

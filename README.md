@@ -115,7 +115,7 @@ npx cdk-agc -k 1  # Keep last hour's assets for quick rollback
 ```yaml
 # GitHub Actions example
 - name: CDK Synth
-  run: cdk synth
+  run: npx cdk synth
 
 - name: Clean unused assets
   run: npx cdk-agc
