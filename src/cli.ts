@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { Command } from "commander";
 import { createRequire } from "module";
-import { cleanupAssets } from "./cleanup.js";
+import { cleanupAssets, cleanupTempDirectories } from "./cleanup.js";
 
 const require = createRequire(import.meta.url);
 const pkg = require("../package.json");
@@ -31,8 +31,6 @@ program
       }
 
       if (options.cleanupTmp) {
-        // Import dynamically to avoid circular dependency
-        const { cleanupTempDirectories } = await import("./cleanup.js");
         await cleanupTempDirectories({
           dryRun: options.dryRun,
           keepHours,
