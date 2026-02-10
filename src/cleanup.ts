@@ -350,8 +350,8 @@ export async function cleanupTempDirectories(options: TempCleanupOptions): Promi
     }
   }
 
-  if (totalCleaned === 0 && totalProtected === 0) {
-    console.log("✓ No temporary CDK directories found.");
+  if (totalCleaned === 0) {
+    console.log("✓ No temporary CDK directories to clean.");
     return;
   }
 
