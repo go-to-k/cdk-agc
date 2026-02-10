@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/go-to-k/cdk-agc/compare/v1.1.0...v1.2.0) (2026-02-10)
+
+
+### Features
+
+* modify logic to search assets ([#19](https://github.com/go-to-k/cdk-agc/issues/19)) ([b123744](https://github.com/go-to-k/cdk-agc/commit/b12374418896b91dfc13411af858f91f5020d89b))
+
 # [1.1.0](https://github.com/go-to-k/cdk-agc/compare/v1.0.2...v1.1.0) (2026-02-10)
 
 
