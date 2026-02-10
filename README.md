@@ -55,9 +55,6 @@ npm install -g cdk-agc
 # Default: Clean cdk.out, keeping only active manifest assets
 npx cdk-agc
 
-# Clean temporary directories in $TMPDIR
-npx cdk-agc -t
-
 # Dry-run: Preview what would be deleted
 npx cdk-agc -d
 
@@ -66,6 +63,9 @@ npx cdk-agc -o ./packages/infra/cdk.out
 
 # Keep assets modified within the last 24 hours
 npx cdk-agc -k 24
+
+# Clean temporary directories in $TMPDIR
+npx cdk-agc -t
 ```
 
 ### Options
