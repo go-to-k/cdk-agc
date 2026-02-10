@@ -15,6 +15,7 @@ program
   .option("-o, --outdir <path>", "CDK output directory", "cdk.out")
   .option("-d, --dry-run", "Show what would be deleted without actually deleting", false)
   .option("-k, --keep-hours <number>", "Protect files modified within this many hours", "0")
+  .option("-t, --cleanup-tmp", "Clean up all temporary cdk.out directories in $TMPDIR", false)
   .action(async (options) => {
     try {
       const keepHours = parseInt(options.keepHours, 10);
@@ -23,11 +24,26 @@ program
         process.exit(1);
       }
 
-      await cleanupAssets({
-        outdir: options.outdir,
-        dryRun: options.dryRun,
-        keepHours,
-      });
+      // Check for conflicting options
+      if (options.cleanupTmp && options.outdir !== "cdk.out") {
+        console.error("Error: --cleanup-tmp and --outdir cannot be used together");
+        process.exit(1);
+      }
+
+      if (options.cleanupTmp) {
+        // Import dynamically to avoid circular dependency
+        const { cleanupTempDirectories } = await import("./cleanup.js");
+        await cleanupTempDirectories({
+          dryRun: options.dryRun,
+          keepHours,
+        });
+      } else {
+        await cleanupAssets({
+          outdir: options.outdir,
+          dryRun: options.dryRun,
+          keepHours,
+        });
+      }
     } catch (error) {
       console.error("Error:", error instanceof Error ? error.message : String(error));
       process.exit(1);

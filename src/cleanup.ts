@@ -1,8 +1,14 @@
 import { promises as fs } from "fs";
 import path from "path";
+import os from "os";
 
 export interface CleanupOptions {
   outdir: string;
+  dryRun: boolean;
+  keepHours: number;
+}
+
+export interface TempCleanupOptions {
   dryRun: boolean;
   keepHours: number;
 }
@@ -250,6 +256,106 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
   } else {
     // Delete in parallel
     await Promise.all(itemsToDelete.map((item) => remove(item.path)));
+    console.log("✓ Cleanup completed successfully.");
+  }
+}
+
+/**
+ * Find all cdk.out temporary directories in $TMPDIR
+ */
+async function findTempDirectories(): Promise<string[]> {
+  const tmpdir = os.tmpdir();
+  const directories: string[] = [];
+
+  try {
+    const items = await fs.readdir(tmpdir, { withFileTypes: true });
+
+    for (const item of items) {
+      // Match directories starting with "cdk.out", "cdk-", or ".cdk"
+      if (item.isDirectory() && (item.name.startsWith("cdk.out") || item.name.startsWith("cdk-") || item.name.startsWith(".cdk"))) {
+        const dirPath = path.join(tmpdir, item.name);
+        directories.push(dirPath);
+      }
+    }
+  } catch (error) {
+    console.warn(`Warning: Failed to scan $TMPDIR (${tmpdir}):`, error);
+  }
+
+  return directories;
+}
+
+/**
+ * Check if directory should be protected based on age
+ */
+async function shouldProtectDirectory(dirPath: string, keepHours: number): Promise<boolean> {
+  if (keepHours <= 0) {
+    return false;
+  }
+
+  try {
+    const stats = await fs.stat(dirPath);
+    const ageHours = (Date.now() - stats.mtimeMs) / (1000 * 60 * 60);
+    return ageHours <= keepHours;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Clean up all temporary CDK output directories
+ */
+export async function cleanupTempDirectories(options: TempCleanupOptions): Promise<void> {
+  const { dryRun, keepHours } = options;
+  const tmpdir = os.tmpdir();
+
+  console.log(`Scanning ${tmpdir}...`);
+  console.log(`Protection policy: Time-based (directories modified within ${keepHours} hours)\n`);
+
+  const directories = await findTempDirectories();
+
+  if (directories.length === 0) {
+    console.log("✓ No temporary CDK directories found.");
+    return;
+  }
+
+  let totalCleaned = 0;
+  let totalProtected = 0;
+  let totalSize = 0;
+
+  for (const dir of directories) {
+    try {
+      // Check if directory should be protected by age
+      if (await shouldProtectDirectory(dir, keepHours)) {
+        totalProtected++;
+        continue;
+      }
+
+      // Calculate size before deletion
+      const size = await calculateSize(dir);
+      totalSize += size;
+
+      if (!dryRun) {
+        await remove(dir);
+      }
+
+      totalCleaned++;
+    } catch (error) {
+      // Silently continue on error
+      continue;
+    }
+  }
+
+  if (totalCleaned === 0 && totalProtected === 0) {
+    console.log("✓ No temporary CDK directories found.");
+    return;
+  }
+
+  console.log(`Found ${totalCleaned} temporary CDK directory(ies)\n`);
+  console.log(`Total size to reclaim: ${formatSize(totalSize)}\n`);
+
+  if (dryRun) {
+    console.log("Dry-run mode: No files were deleted.");
+  } else {
     console.log("✓ Cleanup completed successfully.");
   }
 }
