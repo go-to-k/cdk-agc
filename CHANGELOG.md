@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/go-to-k/cdk-agc/compare/v1.2.0...v1.3.0) (2026-02-11)
+
+
+### Features
+
+* improve output messages with full paths and simpler wording ([#24](https://github.com/go-to-k/cdk-agc/issues/24)) ([3de1310](https://github.com/go-to-k/cdk-agc/commit/3de1310c99ce6e01bd11c8f44ba1331aedf1105a))
+
 # [1.2.0](https://github.com/go-to-k/cdk-agc/compare/v1.1.0...v1.2.0) (2026-02-10)
 
 
