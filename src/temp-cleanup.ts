@@ -9,47 +9,6 @@ export interface TempCleanupOptions {
 }
 
 /**
- * Find all cdk.out temporary directories in $TMPDIR
- */
-async function findTempDirectories(): Promise<string[]> {
-  const tmpdir = os.tmpdir();
-
-  try {
-    const items = await fs.readdir(tmpdir, { withFileTypes: true });
-
-    return items
-      .filter(
-        (item) =>
-          item.isDirectory() &&
-          (item.name.startsWith("cdk.out") ||
-            item.name.startsWith("cdk-") ||
-            item.name.startsWith(".cdk")),
-      )
-      .map((item) => path.join(tmpdir, item.name));
-  } catch (error) {
-    console.warn(`Warning: Failed to scan $TMPDIR (${tmpdir}):`, error);
-    return [];
-  }
-}
-
-/**
- * Check if directory should be protected based on age
- */
-async function shouldProtectDirectory(dirPath: string, keepHours: number): Promise<boolean> {
-  if (keepHours <= 0) {
-    return false;
-  }
-
-  try {
-    const stats = await fs.stat(dirPath);
-    const ageHours = (Date.now() - stats.mtimeMs) / (1000 * 60 * 60);
-    return ageHours <= keepHours;
-  } catch {
-    return false;
-  }
-}
-
-/**
  * Clean up all temporary CDK output directories
  */
 export async function cleanupTempDirectories(options: TempCleanupOptions): Promise<void> {
@@ -103,5 +62,46 @@ export async function cleanupTempDirectories(options: TempCleanupOptions): Promi
     console.log("Dry-run mode: No files were deleted.");
   } else {
     console.log("✓ Cleanup completed successfully.");
+  }
+}
+
+/**
+ * Find all cdk.out temporary directories in $TMPDIR
+ */
+async function findTempDirectories(): Promise<string[]> {
+  const tmpdir = os.tmpdir();
+
+  try {
+    const items = await fs.readdir(tmpdir, { withFileTypes: true });
+
+    return items
+      .filter(
+        (item) =>
+          item.isDirectory() &&
+          (item.name.startsWith("cdk.out") ||
+            item.name.startsWith("cdk-") ||
+            item.name.startsWith(".cdk")),
+      )
+      .map((item) => path.join(tmpdir, item.name));
+  } catch (error) {
+    console.warn(`Warning: Failed to scan $TMPDIR (${tmpdir}):`, error);
+    return [];
+  }
+}
+
+/**
+ * Check if directory should be protected based on age
+ */
+async function shouldProtectDirectory(dirPath: string, keepHours: number): Promise<boolean> {
+  if (keepHours <= 0) {
+    return false;
+  }
+
+  try {
+    const stats = await fs.stat(dirPath);
+    const ageHours = (Date.now() - stats.mtimeMs) / (1000 * 60 * 60);
+    return ageHours <= keepHours;
+  } catch {
+    return false;
   }
 }

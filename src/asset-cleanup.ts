@@ -9,6 +9,71 @@ export interface CleanupOptions {
 }
 
 /**
+ * Clean up cdk.out directory
+ */
+export async function cleanupAssets(options: CleanupOptions): Promise<void> {
+  const { outdir, dryRun, keepHours } = options;
+
+  console.log(`Scanning ${outdir}...`);
+  console.log(`Protection policy: Referenced assets + files modified within ${keepHours} hours\n`);
+
+  // Check directory exists
+  try {
+    await fs.access(outdir);
+  } catch {
+    throw new Error(`Directory not found: ${outdir}`);
+  }
+
+  // Collect asset paths referenced in *.assets.json files
+  const activePaths = await collectAssetPaths(outdir);
+
+  // Scan directory items
+  const entries = await fs.readdir(outdir);
+
+  const itemsToDelete = (
+    await Promise.all(
+      entries
+        .filter((entry) => entry.startsWith("asset."))
+        .map(async (entry) => {
+          const itemPath = path.join(outdir, entry);
+
+          if (await isProtected(itemPath, activePaths, keepHours)) {
+            return null;
+          }
+
+          const size = await calculateSize(itemPath);
+          return { path: itemPath, size };
+        }),
+    )
+  ).filter((item): item is { path: string; size: number } => item !== null);
+
+  // Display results
+  if (itemsToDelete.length === 0) {
+    console.log(`✓ No unused assets found.`);
+    return;
+  }
+
+  console.log(`Found ${itemsToDelete.length} unused item(s):\n`);
+  itemsToDelete.forEach((item) => {
+    const relativePath = path.relative(outdir, item.path);
+    console.log(`  - ${relativePath} (${formatSize(item.size)})`);
+  });
+
+  const totalSize = itemsToDelete.reduce((sum, item) => sum + item.size, 0);
+  console.log(`\nTotal size to reclaim: ${formatSize(totalSize)}\n`);
+
+  if (dryRun) {
+    console.log("Dry-run mode: No files were deleted.");
+  } else {
+    // Delete in parallel
+    await Promise.all(
+      itemsToDelete.map((item) => fs.rm(item.path, { recursive: true, force: true })),
+    );
+    console.log("✓ Cleanup completed successfully.");
+  }
+}
+
+/**
  * Recursively collect asset paths from *.assets.json files
  */
 async function collectAssetPaths(dirPath: string): Promise<Set<string>> {
@@ -88,69 +153,4 @@ async function isProtected(
   }
 
   return false;
-}
-
-/**
- * Clean up cdk.out directory
- */
-export async function cleanupAssets(options: CleanupOptions): Promise<void> {
-  const { outdir, dryRun, keepHours } = options;
-
-  console.log(`Scanning ${outdir}...`);
-  console.log(`Protection policy: Referenced assets + files modified within ${keepHours} hours\n`);
-
-  // Check directory exists
-  try {
-    await fs.access(outdir);
-  } catch {
-    throw new Error(`Directory not found: ${outdir}`);
-  }
-
-  // Collect asset paths referenced in *.assets.json files
-  const activePaths = await collectAssetPaths(outdir);
-
-  // Scan directory items
-  const entries = await fs.readdir(outdir);
-
-  const itemsToDelete = (
-    await Promise.all(
-      entries
-        .filter((entry) => entry.startsWith("asset."))
-        .map(async (entry) => {
-          const itemPath = path.join(outdir, entry);
-
-          if (await isProtected(itemPath, activePaths, keepHours)) {
-            return null;
-          }
-
-          const size = await calculateSize(itemPath);
-          return { path: itemPath, size };
-        }),
-    )
-  ).filter((item): item is { path: string; size: number } => item !== null);
-
-  // Display results
-  if (itemsToDelete.length === 0) {
-    console.log(`✓ No unused assets found.`);
-    return;
-  }
-
-  console.log(`Found ${itemsToDelete.length} unused item(s):\n`);
-  itemsToDelete.forEach((item) => {
-    const relativePath = path.relative(outdir, item.path);
-    console.log(`  - ${relativePath} (${formatSize(item.size)})`);
-  });
-
-  const totalSize = itemsToDelete.reduce((sum, item) => sum + item.size, 0);
-  console.log(`\nTotal size to reclaim: ${formatSize(totalSize)}\n`);
-
-  if (dryRun) {
-    console.log("Dry-run mode: No files were deleted.");
-  } else {
-    // Delete in parallel
-    await Promise.all(
-      itemsToDelete.map((item) => fs.rm(item.path, { recursive: true, force: true })),
-    );
-    console.log("✓ Cleanup completed successfully.");
-  }
 }
