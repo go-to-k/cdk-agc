@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 import { Command } from "commander";
 import { createRequire } from "module";
-import { cleanupAssets, cleanupTempDirectories } from "./cleanup.js";
+import { cleanupAssets } from "./asset-cleanup.js";
+import { cleanupTempDirectories } from "./temp-cleanup.js";
 
 const require = createRequire(import.meta.url);
 const pkg = require("../package.json");
