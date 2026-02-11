@@ -1,7 +1,12 @@
 import { promises as fs } from "fs";
 import path from "path";
-import type { CleanupOptions } from "./types.js";
 import { calculateSize, remove, formatSize } from "./utils.js";
+
+export interface CleanupOptions {
+  outdir: string;
+  dryRun: boolean;
+  keepHours: number;
+}
 
 /**
  * Recursively collect asset paths from *.assets.json files

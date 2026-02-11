@@ -1,8 +1,12 @@
 import { promises as fs } from "fs";
 import path from "path";
 import os from "os";
-import type { TempCleanupOptions } from "./types.js";
 import { calculateSize, remove, formatSize } from "./utils.js";
+
+export interface TempCleanupOptions {
+  dryRun: boolean;
+  keepHours: number;
+}
 
 /**
  * Find all cdk.out temporary directories in $TMPDIR
