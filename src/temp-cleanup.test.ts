@@ -15,42 +15,9 @@ describe("cleanupTempDirectories", () => {
     await fs.rm(TEST_TMPDIR, { recursive: true, force: true });
   });
 
-  async function createTempCdkDir(
-    name: string,
-    withManifest: boolean,
-    withAssets: boolean = false,
-  ) {
+  async function createTempCdkDir(name: string) {
     const dirPath = path.join(TEST_TMPDIR, name);
     await fs.mkdir(dirPath, { recursive: true });
-
-    if (withManifest) {
-      await fs.writeFile(
-        path.join(dirPath, "manifest.json"),
-        JSON.stringify({ version: "1.0.0" }, null, 2),
-      );
-    }
-
-    if (withAssets) {
-      const assetsJson = {
-        version: "1.0.0",
-        files: {
-          testAsset: {
-            source: {
-              path: "asset.abc123",
-              packaging: "zip",
-            },
-            destinations: {},
-          },
-        },
-      };
-      await fs.writeFile(
-        path.join(dirPath, "Stack.assets.json"),
-        JSON.stringify(assetsJson, null, 2),
-      );
-      await fs.mkdir(path.join(dirPath, "asset.abc123"), { recursive: true });
-      await fs.writeFile(path.join(dirPath, "asset.abc123", "file.txt"), "test content");
-    }
-
     return dirPath;
   }
 
@@ -69,8 +36,8 @@ describe("cleanupTempDirectories", () => {
 
     try {
       // Create various temporary directories
-      await createTempCdkDir("cdk.out123", true, true);
-      await createTempCdkDir("cdk-456", false, false);
+      await createTempCdkDir("cdk.out123");
+      await createTempCdkDir("cdk-456");
 
       await cleanupTempDirectories({ dryRun: false, keepHours: 0 });
 
@@ -87,8 +54,8 @@ describe("cleanupTempDirectories", () => {
     os.tmpdir = () => TEST_TMPDIR;
 
     try {
-      await createTempCdkDir("cdk-recent", false, false);
-      const oldDir = await createTempCdkDir("cdk-old", false, false);
+      await createTempCdkDir("cdk-recent");
+      const oldDir = await createTempCdkDir("cdk-old");
 
       // Set old directory to 5 hours ago
       const fiveHoursAgo = Date.now() - 5 * 60 * 60 * 1000;
@@ -110,7 +77,7 @@ describe("cleanupTempDirectories", () => {
     os.tmpdir = () => TEST_TMPDIR;
 
     try {
-      await createTempCdkDir("cdk.out-dryrun", false, false);
+      await createTempCdkDir("cdk.out-dryrun");
 
       await cleanupTempDirectories({ dryRun: true, keepHours: 0 });
 
@@ -126,9 +93,9 @@ describe("cleanupTempDirectories", () => {
     os.tmpdir = () => TEST_TMPDIR;
 
     try {
-      await createTempCdkDir("cdk.out123", false, false);
-      await createTempCdkDir("cdk-456", false, false);
-      await createTempCdkDir(".cdkABC", false, false);
+      await createTempCdkDir("cdk.out123");
+      await createTempCdkDir("cdk-456");
+      await createTempCdkDir(".cdkABC");
       await fs.mkdir(path.join(TEST_TMPDIR, "other-temp-dir"), { recursive: true });
 
       await cleanupTempDirectories({ dryRun: false, keepHours: 0 });

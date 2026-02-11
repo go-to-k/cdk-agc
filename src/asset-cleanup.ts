@@ -111,25 +111,23 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
 
   // Scan directory items
   const entries = await fs.readdir(outdir);
-  const itemsToDelete: Array<{ path: string; size: number }> = [];
 
-  await Promise.all(
-    entries.map(async (entry) => {
-      const itemPath = path.join(outdir, entry);
+  const itemsToDelete = (
+    await Promise.all(
+      entries
+        .filter((entry) => entry.startsWith("asset."))
+        .map(async (entry) => {
+          const itemPath = path.join(outdir, entry);
 
-      // Only consider asset.* files/directories for deletion
-      if (!entry.startsWith("asset.")) {
-        return;
-      }
+          if (await isProtected(itemPath, activePaths, keepHours)) {
+            return null;
+          }
 
-      if (await isProtected(itemPath, activePaths, keepHours)) {
-        return;
-      }
-
-      const size = await calculateSize(itemPath);
-      itemsToDelete.push({ path: itemPath, size });
-    }),
-  );
+          const size = await calculateSize(itemPath);
+          return { path: itemPath, size };
+        }),
+    )
+  ).filter((item): item is { path: string; size: number } => item !== null);
 
   // Display results
   if (itemsToDelete.length === 0) {

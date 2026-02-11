@@ -13,28 +13,23 @@ export interface TempCleanupOptions {
  */
 async function findTempDirectories(): Promise<string[]> {
   const tmpdir = os.tmpdir();
-  const directories: string[] = [];
 
   try {
     const items = await fs.readdir(tmpdir, { withFileTypes: true });
 
-    for (const item of items) {
-      // Match directories starting with "cdk.out", "cdk-", or ".cdk"
-      if (
-        item.isDirectory() &&
-        (item.name.startsWith("cdk.out") ||
-          item.name.startsWith("cdk-") ||
-          item.name.startsWith(".cdk"))
-      ) {
-        const dirPath = path.join(tmpdir, item.name);
-        directories.push(dirPath);
-      }
-    }
+    return items
+      .filter(
+        (item) =>
+          item.isDirectory() &&
+          (item.name.startsWith("cdk.out") ||
+            item.name.startsWith("cdk-") ||
+            item.name.startsWith(".cdk")),
+      )
+      .map((item) => path.join(tmpdir, item.name));
   } catch (error) {
     console.warn(`Warning: Failed to scan $TMPDIR (${tmpdir}):`, error);
+    return [];
   }
-
-  return directories;
 }
 
 /**
