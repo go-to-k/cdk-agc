@@ -57,3 +57,12 @@ new SecondStack(app, "SecondStack", {
     region: process.env.CDK_DEFAULT_REGION,
   },
 });
+
+// Stage with nested stack (creates assembly-MyStage/ directory)
+const stage = new cdk.Stage(app, "MyStage");
+new TestStack(stage, "TestStack", {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION,
+  },
+});
