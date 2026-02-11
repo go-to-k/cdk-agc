@@ -14,16 +14,15 @@ export interface CleanupOptions {
 export async function cleanupAssets(options: CleanupOptions): Promise<void> {
   const { outdir, dryRun, keepHours } = options;
 
-  console.log(`Scanning ${outdir}...`);
-  console.log(
-    `Protection policy: Referenced assets + Time-based (modified within ${keepHours} hours)\n`,
-  );
+  const fullPath = path.resolve(outdir);
+  console.log(`Scanning ${fullPath}`);
+  console.log(keepHours > 0 ? `Keeping files modified within ${keepHours} hours\n` : "");
 
   // Check directory exists
   try {
     await fs.access(outdir);
   } catch {
-    throw new Error(`Directory not found: ${outdir}`);
+    throw new Error(`Directory not found: ${fullPath}`);
   }
 
   // Collect asset paths referenced in *.assets.json files
