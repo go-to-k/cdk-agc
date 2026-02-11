@@ -16,7 +16,7 @@ export async function cleanupTempDirectories(options: TempCleanupOptions): Promi
   const tmpdir = os.tmpdir();
 
   console.log(`Scanning ${tmpdir}...`);
-  console.log(`Protection policy: Time-based (directories modified within ${keepHours} hours)\n`);
+  console.log(`Protection policy: Time-based (modified within ${keepHours} hours)\n`);
 
   const directories = await findTempDirectories();
 

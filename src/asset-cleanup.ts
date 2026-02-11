@@ -15,7 +15,7 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
   const { outdir, dryRun, keepHours } = options;
 
   console.log(`Scanning ${outdir}...`);
-  console.log(`Protection policy: Referenced assets + files modified within ${keepHours} hours\n`);
+  console.log(`Protection policy: Referenced assets + Time-based (modified within ${keepHours} hours)\n`);
 
   // Check directory exists
   try {
