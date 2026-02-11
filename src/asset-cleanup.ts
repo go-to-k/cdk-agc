@@ -1,6 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
-import { calculateSize, remove, formatSize } from "./utils.js";
+import { calculateSize, formatSize } from "./utils.js";
 
 export interface CleanupOptions {
   outdir: string;
@@ -151,7 +151,9 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
     console.log("Dry-run mode: No files were deleted.");
   } else {
     // Delete in parallel
-    await Promise.all(itemsToDelete.map((item) => remove(item.path)));
+    await Promise.all(
+      itemsToDelete.map((item) => fs.rm(item.path, { recursive: true, force: true })),
+    );
     console.log("✓ Cleanup completed successfully.");
   }
 }

@@ -1,7 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import os from "os";
-import { calculateSize, remove, formatSize } from "./utils.js";
+import { calculateSize, formatSize } from "./utils.js";
 
 export interface TempCleanupOptions {
   dryRun: boolean;
@@ -86,7 +86,7 @@ export async function cleanupTempDirectories(options: TempCleanupOptions): Promi
       totalSize += size;
 
       if (!dryRun) {
-        await remove(dir);
+        await fs.rm(dir, { recursive: true, force: true });
       }
 
       totalCleaned++;

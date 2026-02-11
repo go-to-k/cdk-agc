@@ -23,19 +23,6 @@ export async function calculateSize(itemPath: string): Promise<number> {
 }
 
 /**
- * Recursively remove file or directory
- */
-export async function remove(itemPath: string): Promise<void> {
-  const stats = await fs.stat(itemPath);
-
-  if (stats.isDirectory()) {
-    await fs.rm(itemPath, { recursive: true, force: true });
-  } else {
-    await fs.unlink(itemPath);
-  }
-}
-
-/**
  * Format bytes to human-readable string
  */
 export function formatSize(bytes: number): string {
