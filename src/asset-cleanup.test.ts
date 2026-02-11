@@ -147,6 +147,33 @@ describe("cleanupAssets", () => {
     expect(await fileExists("asset.unused-dir")).toBe(false);
   });
 
+  it("should delete unreferenced file assets (not just directories)", async () => {
+    await createTestManifest();
+
+    // Create assets.json with a reference to a file asset
+    const assetsJson = {
+      version: "1.0.0",
+      files: {
+        referencedFile: {
+          source: {
+            path: "asset.referenced-file.txt",
+            packaging: "file",
+          },
+          destinations: {},
+        },
+      },
+    };
+    await createTestFile("Stack.assets.json", JSON.stringify(assetsJson, null, 2));
+
+    await createTestFile("asset.referenced-file.txt", "keep me");
+    await createTestFile("asset.unreferenced-file.txt", "delete me");
+
+    await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 });
+
+    expect(await fileExists("asset.referenced-file.txt")).toBe(true);
+    expect(await fileExists("asset.unreferenced-file.txt")).toBe(false);
+  });
+
   it("should throw error if directory does not exist", async () => {
     await expect(
       cleanupAssets({ outdir: "/non-existent-dir", dryRun: false, keepHours: 0 }),
