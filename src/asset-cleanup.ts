@@ -135,14 +135,13 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
     return;
   }
 
-  const totalSize = itemsToDelete.reduce((sum, item) => sum + item.size, 0);
-
   console.log(`Found ${itemsToDelete.length} unused item(s):\n`);
   itemsToDelete.forEach((item) => {
     const relativePath = path.relative(outdir, item.path);
     console.log(`  - ${relativePath} (${formatSize(item.size)})`);
   });
 
+  const totalSize = itemsToDelete.reduce((sum, item) => sum + item.size, 0);
   console.log(`\nTotal size to reclaim: ${formatSize(totalSize)}\n`);
 
   if (dryRun) {
