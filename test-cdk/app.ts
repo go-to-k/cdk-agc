@@ -39,6 +39,14 @@ class SecondStack extends Stack {
       handler: "index.handler",
       code: lambda.Code.fromAsset(path.join(__dirname, "lambda")),
     });
+
+    // Nested stack
+    const nested = new cdk.NestedStack(this, "NestedStack");
+    new lambda.Function(nested, "NestedFunction", {
+      runtime: lambda.Runtime.NODEJS_24_X,
+      handler: "index.handler",
+      code: lambda.Code.fromAsset(path.join(__dirname, "lambda")),
+    });
   }
 }
 
@@ -52,6 +60,21 @@ new TestStack(app, "TestStack", {
 
 // Second stack that shares the same asset
 new SecondStack(app, "SecondStack", {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION,
+  },
+});
+
+// Stage (creates assembly-MyStage/ directory)
+const stage = new cdk.Stage(app, "MyStage");
+new TestStack(stage, "TestStack", {
+  env: {
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION,
+  },
+});
+new SecondStack(stage, "SecondStack", {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION,
