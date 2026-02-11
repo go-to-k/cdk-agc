@@ -7,6 +7,7 @@ import * as ecr_assets from "aws-cdk-lib/aws-ecr-assets";
 import type { Construct } from "constructs";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
+import { Asset } from "aws-cdk-lib/aws-s3-assets";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -50,6 +51,17 @@ class SecondStack extends Stack {
   }
 }
 
+class ThirdStack extends Stack {
+  constructor(scope: Construct, id: string, props?: StackProps) {
+    super(scope, id, props);
+
+    // S3 Asset
+    new Asset(this, "S3Asset", {
+      path: path.join(__dirname, "s3", "test.txt"),
+    });
+  }
+}
+
 const app = new cdk.App();
 new TestStack(app, "TestStack", {
   env: {
@@ -68,13 +80,7 @@ new SecondStack(app, "SecondStack", {
 
 // Stage (creates assembly-MyStage/ directory)
 const stage = new cdk.Stage(app, "MyStage");
-new TestStack(stage, "TestStack", {
-  env: {
-    account: process.env.CDK_DEFAULT_ACCOUNT,
-    region: process.env.CDK_DEFAULT_REGION,
-  },
-});
-new SecondStack(stage, "SecondStack", {
+new ThirdStack(stage, "ThirdStack", {
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION,
