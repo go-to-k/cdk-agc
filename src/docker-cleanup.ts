@@ -113,40 +113,34 @@ async function deleteDockerImageFromOutput(
   allImagesOutput: string,
   dryRun: boolean,
 ): Promise<void> {
-  try {
-    // Search all images for all tags with this hash
-    const allTags = allImagesOutput
-      .split("\n")
-      .filter((line) => line.trim())
-      .map((line) => line.split("\t")[0])
-      .filter(
-        (tag) =>
-          tag === `cdkasset-${hash}:latest` ||
-          (tag.endsWith(`:${hash}`) && tag.includes("container-assets")),
-      );
+  // Search all images for all tags with this hash
+  const allTags = allImagesOutput
+    .split("\n")
+    .filter((line) => line.trim())
+    .map((line) => line.split("\t")[0])
+    .filter(
+      (tag) =>
+        tag === `cdkasset-${hash}:latest` ||
+        (tag.endsWith(`:${hash}`) && tag.includes("container-assets")),
+    );
 
-    if (allTags.length === 0) {
-      return;
-    }
+  if (allTags.length === 0) {
+    return;
+  }
 
-    allTags.forEach((tag) => {
-      console.log(`  - ${tag}`);
-    });
+  allTags.forEach((tag) => {
+    console.log(`  - ${tag}`);
+  });
 
-    if (!dryRun) {
-      for (const tag of allTags) {
-        try {
-          execSync(`docker rmi ${tag}`, { stdio: "pipe" });
-        } catch (error) {
-          console.warn(
-            `    Warning: Failed to delete Docker image ${tag}: ${error instanceof Error ? error.message : String(error)}`,
-          );
-        }
+  if (!dryRun) {
+    for (const tag of allTags) {
+      try {
+        execSync(`docker rmi ${tag}`, { stdio: "pipe" });
+      } catch (error) {
+        console.warn(
+          `    Warning: Failed to delete Docker image ${tag}: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     }
-  } catch (error) {
-    console.error(
-      `    Failed to delete Docker image for ${hash.substring(0, 12)}...: ${error instanceof Error ? error.message : String(error)}`,
-    );
   }
 }
