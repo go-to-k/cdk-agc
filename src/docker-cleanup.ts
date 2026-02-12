@@ -66,18 +66,15 @@ export async function deleteDockerImages(hashes: string[], dryRun: boolean): Pro
     return;
   }
 
-  // Find existing hashes
   const existingHashes = hashes.filter((hash) => imageExistsInOutput(hash, allImagesOutput));
 
   if (existingHashes.length === 0) {
     return;
   }
 
-  // Print header
   const count = existingHashes.length;
   console.log(`\nFound ${count} Docker image(s):`);
 
-  // Delete images
   for (const hash of existingHashes) {
     await deleteDockerImageFromOutput(hash, allImagesOutput, dryRun);
   }
