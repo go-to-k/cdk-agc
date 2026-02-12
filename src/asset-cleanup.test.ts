@@ -575,4 +575,66 @@ describe("cleanupAssets", () => {
     // deleteDockerImages should not be called when there are no Docker assets
     expect(mockedDeleteDockerImages).not.toHaveBeenCalled();
   });
+
+  it("should only scan assembly-* directories to avoid infinite loops", async () => {
+    await createTestManifest();
+
+    // Create nested assembly-* directories (Stage nesting)
+    await createTestFile("assembly-Stage1/assembly-Stage2/cdk.out", "");
+    const nestedAssetsJson = {
+      version: "1.0.0",
+      files: {
+        nested: {
+          source: {
+            path: "../../asset.nested123",
+            packaging: "zip",
+          },
+          destinations: {},
+        },
+      },
+    };
+    await createTestFile(
+      "assembly-Stage1/assembly-Stage2/Stack.assets.json",
+      JSON.stringify(nestedAssetsJson, null, 2),
+    );
+
+    // Create asset referenced by nested assembly
+    await createTestFile("asset.nested123/index.js", "console.log('nested')");
+
+    // Create unreferenced asset
+    await createTestFile("asset.unused/old.txt", "delete me");
+
+    // Create a non-assembly directory with assets.json that should be ignored (not scanned recursively)
+    const nonAssemblyAssetsJson = {
+      version: "1.0.0",
+      files: {
+        shouldBeIgnored: {
+          source: {
+            path: "../asset.shouldBeIgnored",
+            packaging: "zip",
+          },
+          destinations: {},
+        },
+      },
+    };
+    await createTestFile(
+      "non-assembly-dir/Stack.assets.json",
+      JSON.stringify(nonAssemblyAssetsJson, null, 2),
+    );
+    await createTestFile("asset.shouldBeIgnored/data.txt", "this should be deleted");
+
+    await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 });
+
+    // Asset referenced in nested assembly should be protected
+    expect(await fileExists("asset.nested123/index.js")).toBe(true);
+
+    // Unreferenced asset should be deleted
+    expect(await fileExists("asset.unused")).toBe(false);
+
+    // Asset referenced in non-assembly directory should be deleted (because non-assembly dirs are not scanned)
+    expect(await fileExists("asset.shouldBeIgnored")).toBe(false);
+
+    // Non-assembly directory itself should remain (only asset.* items are deletion candidates)
+    expect(await fileExists("non-assembly-dir/Stack.assets.json")).toBe(true);
+  });
 });
