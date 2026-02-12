@@ -113,67 +113,39 @@ async function deleteDockerImageFromOutput(
   hash: string,
   allImagesOutput: string,
   dryRun: boolean,
-): Promise<boolean> {
+): Promise<void> {
   try {
     // Search all images for all tags with this hash
-    let imageId = "";
-    const allTags: string[] = [];
+    const allTags = allImagesOutput
+      .split("\n")
+      .filter((line) => line.trim())
+      .map((line) => line.split("\t")[0])
+      .filter(
+        (tag) =>
+          tag === `cdkasset-${hash}:latest` ||
+          (tag.endsWith(`:${hash}`) && tag.includes("container-assets")),
+      );
 
-    for (const line of allImagesOutput.split("\n")) {
-      if (!line) continue;
-
-      const [tag, id] = line.split("\t");
-
-      // Check for local format tag
-      if (tag === `cdkasset-${hash}:latest`) {
-        if (!imageId) {
-          imageId = id;
-        }
-        if (!allTags.includes(tag)) {
-          allTags.push(tag);
-        }
-      }
-
-      // Check for ECR format tag
-      if (tag.endsWith(`:${hash}`) && tag.includes("container-assets")) {
-        if (!imageId) {
-          imageId = id;
-        }
-        if (!allTags.includes(tag)) {
-          allTags.push(tag);
-        }
-      }
-    }
-
-    if (!imageId) {
-      return false; // Image doesn't exist
-    }
-
-    if (dryRun) {
-      allTags.forEach((tag) => {
-        console.log(`  - ${tag}`);
-      });
-      return true;
-    }
-
-    // Delete all tags
-    for (const tag of allTags) {
-      try {
-        execSync(`docker rmi ${tag}`, { stdio: "pipe" });
-      } catch {
-        // Ignore if tag doesn't exist or deletion fails
-      }
+    if (allTags.length === 0) {
+      return;
     }
 
     allTags.forEach((tag) => {
       console.log(`  - ${tag}`);
     });
-    return true;
+
+    if (!dryRun) {
+      for (const tag of allTags) {
+        try {
+          execSync(`docker rmi ${tag}`, { stdio: "pipe" });
+        } catch {
+          // Ignore if tag doesn't exist or deletion fails
+        }
+      }
+    }
   } catch (error) {
-    // Log error for debugging
     console.error(
       `    Failed to delete Docker image for ${hash.substring(0, 12)}...: ${error instanceof Error ? error.message : String(error)}`,
     );
-    return false;
   }
 }
