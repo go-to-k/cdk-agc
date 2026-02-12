@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/go-to-k/cdk-agc/compare/v1.4.0...v1.4.1) (2026-02-12)
+
+
+### Bug Fixes
+
+* infinite loops occur when sub-directories include cdk.out ([#27](https://github.com/go-to-k/cdk-agc/issues/27)) ([47340d6](https://github.com/go-to-k/cdk-agc/commit/47340d639d71da208a5ecddba8b240038de087e7))
+
 # [1.4.0](https://github.com/go-to-k/cdk-agc/compare/v1.3.0...v1.4.0) (2026-02-12)
 
 
