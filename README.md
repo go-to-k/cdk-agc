@@ -80,7 +80,7 @@ npx cdk-agc -t
 
 ## What Gets Deleted?
 
-`cdk-agc` **only deletes `asset.*` directories and files** that are not actively referenced. All CDK metadata files and user-created files are always preserved.
+`cdk-agc` **only deletes `asset.*` directories and files** that are not actively referenced. All CDK metadata files are always preserved.
 
 ### Deletion Candidates
 
@@ -96,11 +96,7 @@ npx cdk-agc -t
 - `cdk.out`
 - `*.template.json`
 - `*.assets.json`
-
-**User files** (never deleted):
-
-- Any file/directory not starting with `asset.`
-- Examples: `my-notes.txt`, `debug/`, etc.
+- etc.
 
 ### Protection Policy
 
@@ -133,7 +129,7 @@ npx cdk-agc -k 1  # Keep last hour's assets for quick rollback
   uses: actions/cache@v3
   with:
     path: cdk.out
-    key: cdk-${{ github.sha }}
+    key: cdk-${{ github.head_ref || github.ref_name }}
 ```
 
 ### Monorepo
