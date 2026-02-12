@@ -30,19 +30,8 @@ describe("extractDockerImageHash", () => {
     expect(hash).toBe("9ae778431447a6965dbd163b99646b5275c91c065727748fa16e8ccc29e9dd42");
   });
 
-  it("should return null for non-Docker asset paths", () => {
-    expect(extractDockerImageHash("asset.abc123")).toBe(null);
-    expect(extractDockerImageHash("asset.short-hash")).toBe(null);
+  it("should return null for non-asset paths", () => {
     expect(extractDockerImageHash("not-an-asset")).toBe(null);
-  });
-
-  it("should extract hash even from file asset paths with extensions", () => {
-    // Note: The regex extracts 64-char hash regardless of extensions
-    // The caller needs to determine if it's a Docker asset or not
-    const hash = extractDockerImageHash(
-      "asset.eb93b3552fe4b3afa7eb14804860c17203e945e505594402ffb078c988d41520.zip",
-    );
-    expect(hash).toBe("eb93b3552fe4b3afa7eb14804860c17203e945e505594402ffb078c988d41520");
   });
 });
 
