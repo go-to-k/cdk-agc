@@ -42,18 +42,17 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
 
   const itemsToDelete = (
     await Promise.all(
-      assetEntries
-        .map(async (entry) => {
-          const itemPath = path.join(outdir, entry);
+      assetEntries.map(async (entry) => {
+        const itemPath = path.join(outdir, entry);
 
-          if (await isProtected(itemPath, activePaths, keepHours)) {
-            return null;
-          }
+        if (await isProtected(itemPath, activePaths, keepHours)) {
+          return null;
+        }
 
-          const size = await calculateSize(itemPath);
-          const isDockerImageAsset = allDockerImageAssetPaths.has(itemPath);
-          return { path: itemPath, size, isDockerImageAsset };
-        }),
+        const size = await calculateSize(itemPath);
+        const isDockerImageAsset = allDockerImageAssetPaths.has(itemPath);
+        return { path: itemPath, size, isDockerImageAsset };
+      }),
     )
   ).filter(
     (item): item is { path: string; size: number; isDockerImageAsset: boolean } => item !== null,
