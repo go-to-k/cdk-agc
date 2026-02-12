@@ -1,6 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { calculateSize, formatSize } from "./utils.js";
+import { deleteDockerImages, extractDockerImageHash } from "./docker-cleanup.js";
 
 export interface CleanupOptions {
   outdir: string;
@@ -54,22 +55,33 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
     return;
   }
 
-  console.log(`Found ${itemsToDelete.length} unused item(s):\n`);
-  itemsToDelete.forEach((item) => {
-    const relativePath = path.relative(outdir, item.path);
-    console.log(`  - ${relativePath} (${formatSize(item.size)})`);
-  });
+  console.log(`Found ${itemsToDelete.length} unused item(s):`);
+
+  // Display items and collect Docker image hashes
+  const dockerImageHashes = itemsToDelete
+    .map((item) => {
+      const relativePath = path.relative(outdir, item.path);
+      console.log(`  - ${relativePath} (${formatSize(item.size)})`);
+      return extractDockerImageHash(item.path);
+    })
+    .filter((hash): hash is string => hash !== null);
 
   const totalSize = itemsToDelete.reduce((sum, item) => sum + item.size, 0);
   console.log(`\nTotal size to reclaim: ${formatSize(totalSize)}\n`);
 
-  if (dryRun) {
-    console.log("Dry-run mode: No files were deleted.");
-  } else {
-    // Delete in parallel
+  if (!dryRun) {
     await Promise.all(
       itemsToDelete.map((item) => fs.rm(item.path, { recursive: true, force: true })),
     );
+  }
+
+  if (dockerImageHashes.length > 0) {
+    await deleteDockerImages(dockerImageHashes, dryRun);
+  }
+
+  if (dryRun) {
+    console.log("Dry-run mode: No assets were deleted.");
+  } else {
     console.log("✓ Cleanup completed successfully.");
   }
 }

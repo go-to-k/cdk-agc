@@ -1,7 +1,16 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { promises as fs } from "fs";
 import path from "path";
 import { cleanupAssets } from "./asset-cleanup.js";
+import * as dockerCleanup from "./docker-cleanup.js";
+
+vi.mock("./docker-cleanup.js", async () => {
+  const actual = await vi.importActual<typeof import("./docker-cleanup.js")>("./docker-cleanup.js");
+  return {
+    ...actual,
+    deleteDockerImages: vi.fn(),
+  };
+});
 
 const TEST_DIR = path.join(process.cwd(), "test-cdk-out");
 
@@ -31,6 +40,7 @@ async function fileExists(relativePath: string): Promise<boolean> {
 describe("cleanupAssets", () => {
   beforeEach(async () => {
     await fs.mkdir(TEST_DIR, { recursive: true });
+    vi.clearAllMocks();
   });
 
   afterEach(async () => {
@@ -75,7 +85,7 @@ describe("cleanupAssets", () => {
     // Create referenced asset directories and files
     await createTestFile("asset.abc123/index.js", "console.log('abc')");
     await createTestFile("asset.def456/data.json", '{"key":"value"}');
-    await createTestFile("asset.ghi789/Dockerfile", "FROM node:20");
+    await createTestFile("asset.ghi789/Dockerfile", "FROM node:24");
 
     // Create unreferenced asset directory
     await createTestFile("asset.unused/old.txt", "delete me");
@@ -448,5 +458,89 @@ describe("cleanupAssets", () => {
 
     // Unreferenced asset should be deleted
     expect(await fileExists("asset.unused")).toBe(false);
+  });
+
+  it("should delete Docker images when deleting Docker asset directories", async () => {
+    await createTestManifest();
+
+    const referencedHash = "f575bdffb1fb794e3010c609b768095d4f1d64e2dca5ce27938971210488a04d";
+    const assetsJson = {
+      version: "1.0.0",
+      dockerImages: {
+        [referencedHash]: {
+          source: {
+            directory: `asset.${referencedHash}`,
+          },
+          destinations: {
+            "123456789012-us-east-1-xxx": {
+              repositoryName: "cdk-hnb659fds-container-assets-123456789012-us-east-1",
+              imageTag: referencedHash,
+              region: "us-east-1",
+            },
+          },
+        },
+      },
+    };
+
+    await createTestFile("Stack.assets.json", JSON.stringify(assetsJson, null, 2));
+
+    // Create referenced Docker asset
+    await createTestFile(`asset.${referencedHash}/Dockerfile`, "FROM node:24");
+
+    // Create unreferenced Docker asset
+    const unusedHash = "9ae778431447a6965dbd163b99646b5275c91c065727748fa16e8ccc29e9dd42";
+    await createTestFile(`asset.${unusedHash}/Dockerfile`, "FROM node:24");
+
+    const mockedDeleteDockerImages = vi.mocked(dockerCleanup.deleteDockerImages);
+    mockedDeleteDockerImages.mockResolvedValue(undefined);
+
+    await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 });
+
+    // Referenced Docker asset should be protected
+    expect(await fileExists(`asset.${referencedHash}`)).toBe(true);
+
+    // Unreferenced Docker asset should be deleted
+    expect(await fileExists(`asset.${unusedHash}`)).toBe(false);
+
+    // deleteDockerImages should be called with unreferenced hash
+    expect(mockedDeleteDockerImages).toHaveBeenCalledTimes(1);
+    expect(mockedDeleteDockerImages).toHaveBeenCalledWith([unusedHash], false);
+  });
+
+  it("should show Docker images in dry-run mode", async () => {
+    await createTestManifest();
+
+    const dockerHash = "f575bdffb1fb794e3010c609b768095d4f1d64e2dca5ce27938971210488a04d";
+
+    // Create unreferenced Docker asset
+    await createTestFile(`asset.${dockerHash}/Dockerfile`, "FROM node:24");
+
+    const mockedDeleteDockerImages = vi.mocked(dockerCleanup.deleteDockerImages);
+    mockedDeleteDockerImages.mockResolvedValue(undefined);
+
+    await cleanupAssets({ outdir: TEST_DIR, dryRun: true, keepHours: 0 });
+
+    // Docker asset directory should NOT be deleted in dry-run mode
+    expect(await fileExists(`asset.${dockerHash}`)).toBe(true);
+
+    // deleteDockerImages should be called with dryRun=true
+    expect(mockedDeleteDockerImages).toHaveBeenCalledWith([dockerHash], true);
+  });
+
+  it("should not call deleteDockerImages for non-Docker assets", async () => {
+    await createTestManifest();
+
+    // Create unreferenced file asset (not Docker)
+    await createTestFile("asset.abc123/data.txt", "not docker");
+
+    const mockedDeleteDockerImages = vi.mocked(dockerCleanup.deleteDockerImages);
+
+    await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 });
+
+    // File asset should be deleted
+    expect(await fileExists("asset.abc123")).toBe(false);
+
+    // deleteDockerImages should not be called when there are no Docker assets
+    expect(mockedDeleteDockerImages).not.toHaveBeenCalled();
   });
 });
