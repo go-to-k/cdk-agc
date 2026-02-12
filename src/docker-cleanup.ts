@@ -6,8 +6,7 @@ import path from "path";
  * Collect Docker image info from assets.json files
  */
 export function extractDockerImageHash(assetPath: string): string | null {
-  // Extract hash from asset path like "asset.f575bdff..."
-  const match = assetPath.match(/asset\.([a-f0-9]{64})/);
+  const match = assetPath.match(/asset\.(.+)/);
   return match ? match[1] : null;
 }
 
