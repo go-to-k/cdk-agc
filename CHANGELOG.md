@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/go-to-k/cdk-agc/compare/v1.3.0...v1.4.0) (2026-02-12)
+
+
+### Features
+
+* support docker image deletion ([#26](https://github.com/go-to-k/cdk-agc/issues/26)) ([5b6cc7f](https://github.com/go-to-k/cdk-agc/commit/5b6cc7fd428d9a3c0b516dd4565fbace27ef2fdf))
+
 # [1.3.0](https://github.com/go-to-k/cdk-agc/compare/v1.2.0...v1.3.0) (2026-02-11)
 
 
