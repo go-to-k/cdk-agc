@@ -68,12 +68,7 @@ export async function deleteDockerImages(hashes: string[], dryRun: boolean): Pro
   }
 
   // Find existing hashes
-  const existingHashes: string[] = [];
-  for (const hash of hashes) {
-    if (imageExistsInOutput(hash, allImagesOutput)) {
-      existingHashes.push(hash);
-    }
-  }
+  const existingHashes = hashes.filter((hash) => imageExistsInOutput(hash, allImagesOutput));
 
   if (existingHashes.length === 0) {
     return;
