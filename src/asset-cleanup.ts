@@ -35,14 +35,14 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
 
   // Scan directory items
   const entries = await fs.readdir(outdir);
+  const assetEntries = entries.filter((entry) => entry.startsWith("asset."));
 
   // Collect all Docker image asset paths (both active and to-be-deleted)
-  const allDockerImageAssetPaths = await collectDockerImageAssetPaths(entries, outdir);
+  const allDockerImageAssetPaths = await collectDockerImageAssetPaths(assetEntries, outdir);
 
   const itemsToDelete = (
     await Promise.all(
-      entries
-        .filter((entry) => entry.startsWith("asset."))
+      assetEntries
         .map(async (entry) => {
           const itemPath = path.join(outdir, entry);
 

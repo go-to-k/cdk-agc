@@ -13,32 +13,32 @@ export function extractDockerImageHash(assetPath: string): string | null {
 
 /**
  * Check if asset directories contain Dockerfile to identify Docker image assets
+ * @param assetEntries - Pre-filtered entries that start with "asset."
+ * @param outdir - Directory path where assets are located
  */
 export async function collectDockerImageAssetPaths(
-  entries: string[],
+  assetEntries: string[],
   outdir: string,
 ): Promise<Set<string>> {
   return new Set<string>(
     await Promise.all(
-      entries
-        .filter((entry) => entry.startsWith("asset."))
-        .map(async (entry) => {
-          const itemPath = path.join(outdir, entry);
-          try {
-            const stats = await fs.stat(itemPath);
-            if (!stats.isDirectory()) return null;
+      assetEntries.map(async (entry) => {
+        const itemPath = path.join(outdir, entry);
+        try {
+          const stats = await fs.stat(itemPath);
+          if (!stats.isDirectory()) return null;
 
-            // Check if Dockerfile exists in the directory
-            try {
-              await fs.access(path.join(itemPath, "Dockerfile"));
-              return itemPath;
-            } catch {
-              return null;
-            }
+          // Check if Dockerfile exists in the directory
+          try {
+            await fs.access(path.join(itemPath, "Dockerfile"));
+            return itemPath;
           } catch {
             return null;
           }
-        }),
+        } catch {
+          return null;
+        }
+      }),
     ).then((paths) => paths.filter((p): p is string => p !== null)),
   );
 }

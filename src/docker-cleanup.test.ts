@@ -227,7 +227,8 @@ describe("collectDockerImageAssetPaths", () => {
     await fs.writeFile(path.join(assetDir, "Dockerfile"), "FROM node:24");
 
     const entries = await fs.readdir(testDir);
-    const result = await collectDockerImageAssetPaths(entries, testDir);
+    const assetEntries = entries.filter((entry) => entry.startsWith("asset."));
+    const result = await collectDockerImageAssetPaths(assetEntries, testDir);
 
     expect(result.size).toBe(1);
     expect(result.has(assetDir)).toBe(true);
@@ -239,7 +240,8 @@ describe("collectDockerImageAssetPaths", () => {
     await fs.writeFile(path.join(assetDir, "some-file.txt"), "content");
 
     const entries = await fs.readdir(testDir);
-    const result = await collectDockerImageAssetPaths(entries, testDir);
+    const assetEntries = entries.filter((entry) => entry.startsWith("asset."));
+    const result = await collectDockerImageAssetPaths(assetEntries, testDir);
 
     expect(result.size).toBe(0);
   });
@@ -249,7 +251,8 @@ describe("collectDockerImageAssetPaths", () => {
     await fs.writeFile(path.join(testDir, `asset.${hash}.zip`), "content");
 
     const entries = await fs.readdir(testDir);
-    const result = await collectDockerImageAssetPaths(entries, testDir);
+    const assetEntries = entries.filter((entry) => entry.startsWith("asset."));
+    const result = await collectDockerImageAssetPaths(assetEntries, testDir);
 
     expect(result.size).toBe(0);
   });
@@ -267,7 +270,8 @@ describe("collectDockerImageAssetPaths", () => {
     await fs.writeFile(path.join(assetDir2, "Dockerfile"), "FROM node:20");
 
     const entries = await fs.readdir(testDir);
-    const result = await collectDockerImageAssetPaths(entries, testDir);
+    const assetEntries = entries.filter((entry) => entry.startsWith("asset."));
+    const result = await collectDockerImageAssetPaths(assetEntries, testDir);
 
     expect(result.size).toBe(2);
     expect(result.has(assetDir1)).toBe(true);
@@ -280,14 +284,16 @@ describe("collectDockerImageAssetPaths", () => {
     await fs.writeFile(path.join(dockerDir, "Dockerfile"), "FROM node:24");
 
     const entries = await fs.readdir(testDir);
-    const result = await collectDockerImageAssetPaths(entries, testDir);
+    const assetEntries = entries.filter((entry) => entry.startsWith("asset."));
+    const result = await collectDockerImageAssetPaths(assetEntries, testDir);
 
     expect(result.size).toBe(0);
   });
 
   it("should handle empty directory", async () => {
     const entries = await fs.readdir(testDir);
-    const result = await collectDockerImageAssetPaths(entries, testDir);
+    const assetEntries = entries.filter((entry) => entry.startsWith("asset."));
+    const result = await collectDockerImageAssetPaths(assetEntries, testDir);
 
     expect(result.size).toBe(0);
   });
@@ -305,7 +311,8 @@ describe("collectDockerImageAssetPaths", () => {
     await fs.writeFile(path.join(fileAssetDir, "index.js"), "console.log('hello')");
 
     const entries = await fs.readdir(testDir);
-    const result = await collectDockerImageAssetPaths(entries, testDir);
+    const assetEntries = entries.filter((entry) => entry.startsWith("asset."));
+    const result = await collectDockerImageAssetPaths(assetEntries, testDir);
 
     expect(result.size).toBe(1);
     expect(result.has(dockerAssetDir)).toBe(true);
