@@ -137,8 +137,10 @@ async function deleteDockerImageFromOutput(
       for (const tag of allTags) {
         try {
           execSync(`docker rmi ${tag}`, { stdio: "pipe" });
-        } catch {
-          // Ignore if tag doesn't exist or deletion fails
+        } catch (error) {
+          console.warn(
+            `    Warning: Failed to delete Docker image ${tag}: ${error instanceof Error ? error.message : String(error)}`,
+          );
         }
       }
     }
