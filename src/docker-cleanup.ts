@@ -3,14 +3,6 @@ import { promises as fs } from "fs";
 import path from "path";
 
 /**
- * Extract hash from Docker image asset path
- */
-export function extractDockerImageHash(assetPath: string): string | null {
-  const match = assetPath.match(/asset\.(.+)/);
-  return match ? match[1] : null;
-}
-
-/**
  * Check if asset directories contain Dockerfile to identify Docker image assets
  * @param assetEntries - Pre-filtered entries that start with "asset."
  * @param outdir - Directory path where assets are located
@@ -40,6 +32,14 @@ export async function collectDockerImageAssetPaths(
       }),
     ).then((paths) => paths.filter((p): p is string => p !== null)),
   );
+}
+
+/**
+ * Extract hash from Docker image asset path
+ */
+export function extractDockerImageHash(assetPath: string): string | null {
+  const match = assetPath.match(/asset\.(.+)/);
+  return match ? match[1] : null;
 }
 
 /**
