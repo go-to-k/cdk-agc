@@ -3,7 +3,7 @@ import { promises as fs } from "fs";
 import path from "path";
 
 /**
- * Collect Docker image info from assets.json files
+ * Extract hash from Docker image asset path
  */
 export function extractDockerImageHash(assetPath: string): string | null {
   const match = assetPath.match(/asset\.(.+)/);
