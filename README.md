@@ -9,6 +9,7 @@
 - **Clean `cdk.out` directories**: Remove unused assets while protecting referenced files
   - Only deletes unreferenced `asset.*` directories and files - all other files are automatically protected
   - Protects recently modified files (configurable with `-k/--keep-hours`)
+  - **Automatically removes Docker images** associated with deleted asset directories
 
 - **Clean temporary directories** (`-t/--cleanup-tmp`): Delete accumulated temporary CDK directories in `$TMPDIR`
   - Deletes entire directories
@@ -21,6 +22,7 @@ This helps optimize storage and streamline CI/CD caching.
 ### Problems
 
 - CDK asset directories can grow to multiple GBs over time
+- Docker images from CDK builds accumulate in local Docker daemon
 - Temporary directories in `$TMPDIR` accumulate
 - Disk space exhaustion from accumulated build artifacts
 - Slow CI/CD pipelines due to large cache sizes
@@ -86,6 +88,9 @@ npx cdk-agc -t
 
 - `asset.{hash}/` - Unreferenced asset directories
 - `asset.{hash}.{ext}` - Unreferenced asset files (e.g., `.txt`, `.zip`)
+- **Docker images** - Local Docker images associated with deleted asset directories
+  - Searches for both ECR format (`{account}.dkr.ecr.{region}.amazonaws.com/cdk-*:hash`) and local format (`cdkasset-{hash}:latest`)
+  - Only removes images for assets that are being deleted
 
 ### Always Protected
 
