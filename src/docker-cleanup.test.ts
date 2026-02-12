@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { deleteDockerImage, extractDockerImageHash } from "./docker-cleanup.js";
+import { deleteDockerImages, extractDockerImageHash } from "./docker-cleanup.js";
 import { execSync } from "child_process";
 
 vi.mock("child_process", () => ({
@@ -39,7 +39,7 @@ describe("extractDockerImageHash", () => {
   });
 });
 
-describe("deleteDockerImage", () => {
+describe("deleteDockerImages", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Set default mock behavior to prevent actual Docker commands
@@ -48,7 +48,7 @@ describe("deleteDockerImage", () => {
     });
   });
 
-  it("should delete Docker image by local format tag", async () => {
+  it("should delete Docker images by local and ECR format tags", async () => {
     const hash = "f575bdffb1fb794e3010c609b768095d4f1d64e2dca5ce27938971210488a04d";
     const imageId = "cd626b785a64";
 
@@ -61,64 +61,50 @@ describe("deleteDockerImage", () => {
     // Mock: docker rmi for ECR tag
     mockedExecSync.mockReturnValueOnce("" as any);
 
-    const result = await deleteDockerImage(hash, false);
+    await deleteDockerImages([hash], false);
 
-    expect(result).toBe(true);
+    expect(mockedExecSync).toHaveBeenCalledTimes(3); // 1 search + 2 deletes
   });
 
-  it("should delete Docker image by ECR format tag when local format not found", async () => {
+  it("should delete Docker image by ECR format tag only", async () => {
     const hash = "9ae778431447a6965dbd163b99646b5275c91c065727748fa16e8ccc29e9dd42";
     const imageId = "9cd584f88ee2";
 
     // Mock: search all images and find ECR format (no local format)
-    const allImagesOutput = `
-123456789012.dkr.ecr.us-east-1.amazonaws.com/cdk-hnb659fds-container-assets-123456789012-us-east-1:${hash}\t${imageId}
-cdkasset-other:latest\tabcd1234
-    `.trim();
+    const allImagesOutput = `123456789012.dkr.ecr.us-east-1.amazonaws.com/cdk-hnb659fds-container-assets-123456789012-us-east-1:${hash}\t${imageId}\ncdkasset-other:latest\tabcd1234`;
     mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
 
     // Mock: docker rmi for ECR tag succeeds
     mockedExecSync.mockReturnValueOnce("" as any);
 
-    const result = await deleteDockerImage(hash, false);
+    await deleteDockerImages([hash], false);
 
-    expect(result).toBe(true);
+    expect(mockedExecSync).toHaveBeenCalledTimes(2); // 1 search + 1 delete
   });
 
-  it("should return false when image does not exist", async () => {
+  it("should not delete when image does not exist", async () => {
     const hash = "nonexistent0000000000000000000000000000000000000000000000000000000";
 
-    // Mock: local format tag not found
-    mockedExecSync.mockReturnValueOnce("" as any);
-
     // Mock: no matching images in all images
-    const allImagesOutput = `
-cdkasset-other:latest\tabcd1234
-    `.trim();
+    const allImagesOutput = `cdkasset-other:latest\tabcd1234`;
     mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
 
-    const result = await deleteDockerImage(hash, false);
+    await deleteDockerImages([hash], false);
 
-    expect(result).toBe(false);
-    expect(mockedExecSync).not.toHaveBeenCalledWith(
-      expect.stringContaining("docker rmi"),
-      expect.anything(),
-    );
+    expect(mockedExecSync).toHaveBeenCalledTimes(1); // Only search, no delete
   });
 
   it("should not delete in dry-run mode", async () => {
     const hash = "f575bdffb1fb794e3010c609b768095d4f1d64e2dca5ce27938971210488a04d";
     const imageId = "cd626b785a64";
 
-    // Reset and setup fresh mock
-    mockedExecSync.mockReset();
+    // Mock: search all images
     const localTag = `cdkasset-${hash}:latest`;
     const allImagesOutput = `${localTag}\t${imageId}`;
-    mockedExecSync.mockReturnValue(allImagesOutput as any);
+    mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
 
-    const result = await deleteDockerImage(hash, true);
+    await deleteDockerImages([hash], true);
 
-    expect(result).toBe(true);
     expect(mockedExecSync).toHaveBeenCalledTimes(1); // Only search, no delete
     expect(mockedExecSync).not.toHaveBeenCalledWith(
       expect.stringContaining("docker rmi"),
@@ -139,9 +125,10 @@ cdkasset-other:latest\tabcd1234
       throw new Error("Error response from daemon: conflict: unable to delete");
     });
 
-    const result = await deleteDockerImage(hash, false);
+    // Should not throw - errors are caught and logged
+    await deleteDockerImages([hash], false);
 
-    expect(result).toBe(true); // Function still succeeds even if docker rmi fails
+    expect(mockedExecSync).toHaveBeenCalledTimes(2); // search + 1 delete attempt
   });
 
   it("should handle execSync errors when searching for images", async () => {
@@ -152,42 +139,65 @@ cdkasset-other:latest\tabcd1234
       throw new Error("Docker not running");
     });
 
-    const result = await deleteDockerImage(hash, false);
+    // Should not throw - errors are caught silently
+    await deleteDockerImages([hash], false);
 
-    expect(result).toBe(false); // Should return false when docker images fails
+    expect(mockedExecSync).toHaveBeenCalledTimes(1); // Only search attempt
   });
 
   it("should only match ECR tags with container-assets", async () => {
     const hash = "f575bdffb1fb794e3010c609b768095d4f1d64e2dca5ce27938971210488a04d";
 
-    // Mock: local format tag not found
-    mockedExecSync.mockReturnValueOnce("" as any);
-
     // Mock: search all images - has matching hash but not container-assets
-    const allImagesOutput = `
-my-custom-repo:${hash}\tabcd1234
-other-repo/image:latest\tef567890
-    `.trim();
+    const allImagesOutput = `my-custom-repo:${hash}\tabcd1234\nother-repo/image:latest\tef567890`;
     mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
 
-    const result = await deleteDockerImage(hash, false);
+    await deleteDockerImages([hash], false);
 
-    // Should not match non-container-assets repos
-    expect(result).toBe(false);
+    // Should not match non-container-assets repos - only 1 search, no delete
+    expect(mockedExecSync).toHaveBeenCalledTimes(1);
   });
 
   it("should match ECR format with full AWS URI", async () => {
     const hash = "9ae778431447a6965dbd163b99646b5275c91c065727748fa16e8ccc29e9dd42";
     const imageId = "9cd584f88ee2";
 
-    // Reset and setup fresh mock
-    mockedExecSync.mockReset();
+    // Mock: search all images and find ECR URI with full format
     const allImagesOutput = `123456789012.dkr.ecr.us-east-1.amazonaws.com/cdk-hnb659fds-container-assets-123456789012-us-east-1:${hash}\t${imageId}`;
     mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
+
+    // Mock: docker rmi succeeds
     mockedExecSync.mockReturnValueOnce("" as any);
 
-    const result = await deleteDockerImage(hash, false);
+    await deleteDockerImages([hash], false);
 
-    expect(result).toBe(true);
+    expect(mockedExecSync).toHaveBeenCalledTimes(2); // 1 search + 1 delete
+  });
+
+  it("should handle empty array", async () => {
+    await deleteDockerImages([], false);
+
+    // Should not call execSync at all
+    expect(mockedExecSync).not.toHaveBeenCalled();
+  });
+
+  it("should handle multiple hashes efficiently", async () => {
+    const hash1 = "f575bdffb1fb794e3010c609b768095d4f1d64e2dca5ce27938971210488a04d";
+    const hash2 = "9ae778431447a6965dbd163b99646b5275c91c065727748fa16e8ccc29e9dd42";
+    const imageId1 = "cd626b785a64";
+    const imageId2 = "9cd584f88ee2";
+
+    // Mock: search all images once for both hashes
+    const allImagesOutput = `cdkasset-${hash1}:latest\t${imageId1}\ncdkasset-${hash2}:latest\t${imageId2}`;
+    mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
+
+    // Mock: docker rmi for both images
+    mockedExecSync.mockReturnValueOnce("" as any);
+    mockedExecSync.mockReturnValueOnce("" as any);
+
+    await deleteDockerImages([hash1, hash2], false);
+
+    // Should only search once, then delete both - total 3 calls
+    expect(mockedExecSync).toHaveBeenCalledTimes(3);
   });
 });
