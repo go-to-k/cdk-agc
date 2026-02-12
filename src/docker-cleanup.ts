@@ -62,7 +62,7 @@ export async function deleteDockerImages(hashes: string[], dryRun: boolean): Pro
   } catch {
     // Docker not available or error - warn user
     console.warn(
-      `\nWarning: Cannot check Docker images (Docker may not be running). Skipping Docker cleanup.`,
+      `\nWarning: Cannot check Docker images (Docker daemon may not be running). Skipping Docker cleanup.`,
     );
     return;
   }
