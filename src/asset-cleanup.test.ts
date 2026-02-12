@@ -8,6 +8,7 @@ vi.mock("./docker-cleanup.js", async () => {
   const actual = await vi.importActual<typeof import("./docker-cleanup.js")>("./docker-cleanup.js");
   return {
     ...actual,
+    collectDockerImageAssetPaths: vi.fn(),
     deleteDockerImages: vi.fn(),
   };
 });
@@ -41,6 +42,12 @@ describe("cleanupAssets", () => {
   beforeEach(async () => {
     await fs.mkdir(TEST_DIR, { recursive: true });
     vi.clearAllMocks();
+
+    // Set default mock behavior: return empty set (no Docker assets)
+    const mockedCollectDockerImageAssetPaths = vi.mocked(
+      dockerCleanup.collectDockerImageAssetPaths,
+    );
+    mockedCollectDockerImageAssetPaths.mockResolvedValue(new Set());
   });
 
   afterEach(async () => {
@@ -491,6 +498,17 @@ describe("cleanupAssets", () => {
     const unusedHash = "9ae778431447a6965dbd163b99646b5275c91c065727748fa16e8ccc29e9dd42";
     await createTestFile(`asset.${unusedHash}/Dockerfile`, "FROM node:24");
 
+    // Mock collectDockerImageAssetPaths to identify Docker assets
+    const mockedCollectDockerImageAssetPaths = vi.mocked(
+      dockerCleanup.collectDockerImageAssetPaths,
+    );
+    mockedCollectDockerImageAssetPaths.mockResolvedValue(
+      new Set([
+        path.join(TEST_DIR, `asset.${referencedHash}`),
+        path.join(TEST_DIR, `asset.${unusedHash}`),
+      ]),
+    );
+
     const mockedDeleteDockerImages = vi.mocked(dockerCleanup.deleteDockerImages);
     mockedDeleteDockerImages.mockResolvedValue(undefined);
 
@@ -515,6 +533,14 @@ describe("cleanupAssets", () => {
     // Create unreferenced Docker asset
     await createTestFile(`asset.${dockerHash}/Dockerfile`, "FROM node:24");
 
+    // Mock collectDockerImageAssetPaths to identify Docker assets
+    const mockedCollectDockerImageAssetPaths = vi.mocked(
+      dockerCleanup.collectDockerImageAssetPaths,
+    );
+    mockedCollectDockerImageAssetPaths.mockResolvedValue(
+      new Set([path.join(TEST_DIR, `asset.${dockerHash}`)]),
+    );
+
     const mockedDeleteDockerImages = vi.mocked(dockerCleanup.deleteDockerImages);
     mockedDeleteDockerImages.mockResolvedValue(undefined);
 
@@ -532,6 +558,12 @@ describe("cleanupAssets", () => {
 
     // Create unreferenced file asset (not Docker)
     await createTestFile("asset.abc123/data.txt", "not docker");
+
+    // Mock collectDockerImageAssetPaths to return empty (no Docker assets)
+    const mockedCollectDockerImageAssetPaths = vi.mocked(
+      dockerCleanup.collectDockerImageAssetPaths,
+    );
+    mockedCollectDockerImageAssetPaths.mockResolvedValue(new Set());
 
     const mockedDeleteDockerImages = vi.mocked(dockerCleanup.deleteDockerImages);
 

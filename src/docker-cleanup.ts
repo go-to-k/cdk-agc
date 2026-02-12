@@ -1,4 +1,6 @@
 import { execSync } from "child_process";
+import { promises as fs } from "fs";
+import path from "path";
 
 /**
  * Collect Docker image info from assets.json files
@@ -7,6 +9,38 @@ export function extractDockerImageHash(assetPath: string): string | null {
   // Extract hash from asset path like "asset.f575bdff..."
   const match = assetPath.match(/asset\.([a-f0-9]{64})/);
   return match ? match[1] : null;
+}
+
+/**
+ * Check if asset directories contain Dockerfile to identify Docker image assets
+ */
+export async function collectDockerImageAssetPaths(
+  entries: string[],
+  outdir: string,
+): Promise<Set<string>> {
+  return new Set<string>(
+    await Promise.all(
+      entries
+        .filter((entry) => entry.startsWith("asset."))
+        .map(async (entry) => {
+          const itemPath = path.join(outdir, entry);
+          try {
+            const stats = await fs.stat(itemPath);
+            if (!stats.isDirectory()) return null;
+
+            // Check if Dockerfile exists in the directory
+            try {
+              await fs.access(path.join(itemPath, "Dockerfile"));
+              return itemPath;
+            } catch {
+              return null;
+            }
+          } catch {
+            return null;
+          }
+        }),
+    ).then((paths) => paths.filter((p): p is string => p !== null)),
+  );
 }
 
 /**

@@ -1,6 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { deleteDockerImages, extractDockerImageHash } from "./docker-cleanup.js";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import {
+  collectDockerImageAssetPaths,
+  deleteDockerImages,
+  extractDockerImageHash,
+} from "./docker-cleanup.js";
 import { execSync } from "child_process";
+import { promises as fs } from "fs";
+import path from "path";
+import os from "os";
 
 vi.mock("child_process", () => ({
   execSync: vi.fn(),
@@ -199,5 +206,109 @@ describe("deleteDockerImages", () => {
 
     // Should only search once, then delete both - total 3 calls
     expect(mockedExecSync).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe("collectDockerImageAssetPaths", () => {
+  let testDir: string;
+
+  beforeEach(async () => {
+    testDir = await fs.mkdtemp(path.join(os.tmpdir(), "docker-cleanup-test-"));
+  });
+
+  afterEach(async () => {
+    await fs.rm(testDir, { recursive: true, force: true });
+  });
+
+  it("should identify directories with Dockerfile as Docker image assets", async () => {
+    const hash = "f575bdffb1fb794e3010c609b768095d4f1d64e2dca5ce27938971210488a04d";
+    const assetDir = path.join(testDir, `asset.${hash}`);
+    await fs.mkdir(assetDir);
+    await fs.writeFile(path.join(assetDir, "Dockerfile"), "FROM node:24");
+
+    const entries = await fs.readdir(testDir);
+    const result = await collectDockerImageAssetPaths(entries, testDir);
+
+    expect(result.size).toBe(1);
+    expect(result.has(assetDir)).toBe(true);
+  });
+
+  it("should not identify directories without Dockerfile as Docker image assets", async () => {
+    const assetDir = path.join(testDir, "asset.abc123");
+    await fs.mkdir(assetDir);
+    await fs.writeFile(path.join(assetDir, "some-file.txt"), "content");
+
+    const entries = await fs.readdir(testDir);
+    const result = await collectDockerImageAssetPaths(entries, testDir);
+
+    expect(result.size).toBe(0);
+  });
+
+  it("should not identify files as Docker image assets", async () => {
+    const hash = "f575bdffb1fb794e3010c609b768095d4f1d64e2dca5ce27938971210488a04d";
+    await fs.writeFile(path.join(testDir, `asset.${hash}.zip`), "content");
+
+    const entries = await fs.readdir(testDir);
+    const result = await collectDockerImageAssetPaths(entries, testDir);
+
+    expect(result.size).toBe(0);
+  });
+
+  it("should handle multiple Docker image assets", async () => {
+    const hash1 = "f575bdffb1fb794e3010c609b768095d4f1d64e2dca5ce27938971210488a04d";
+    const hash2 = "9ae778431447a6965dbd163b99646b5275c91c065727748fa16e8ccc29e9dd42";
+
+    const assetDir1 = path.join(testDir, `asset.${hash1}`);
+    const assetDir2 = path.join(testDir, `asset.${hash2}`);
+
+    await fs.mkdir(assetDir1);
+    await fs.mkdir(assetDir2);
+    await fs.writeFile(path.join(assetDir1, "Dockerfile"), "FROM node:24");
+    await fs.writeFile(path.join(assetDir2, "Dockerfile"), "FROM node:20");
+
+    const entries = await fs.readdir(testDir);
+    const result = await collectDockerImageAssetPaths(entries, testDir);
+
+    expect(result.size).toBe(2);
+    expect(result.has(assetDir1)).toBe(true);
+    expect(result.has(assetDir2)).toBe(true);
+  });
+
+  it("should only process entries starting with 'asset.'", async () => {
+    const dockerDir = path.join(testDir, "not-an-asset");
+    await fs.mkdir(dockerDir);
+    await fs.writeFile(path.join(dockerDir, "Dockerfile"), "FROM node:24");
+
+    const entries = await fs.readdir(testDir);
+    const result = await collectDockerImageAssetPaths(entries, testDir);
+
+    expect(result.size).toBe(0);
+  });
+
+  it("should handle empty directory", async () => {
+    const entries = await fs.readdir(testDir);
+    const result = await collectDockerImageAssetPaths(entries, testDir);
+
+    expect(result.size).toBe(0);
+  });
+
+  it("should handle mixed assets (Docker and file assets)", async () => {
+    const dockerHash = "f575bdffb1fb794e3010c609b768095d4f1d64e2dca5ce27938971210488a04d";
+    const fileHash = "9ae778431447a6965dbd163b99646b5275c91c065727748fa16e8ccc29e9dd42";
+
+    const dockerAssetDir = path.join(testDir, `asset.${dockerHash}`);
+    const fileAssetDir = path.join(testDir, `asset.${fileHash}`);
+
+    await fs.mkdir(dockerAssetDir);
+    await fs.mkdir(fileAssetDir);
+    await fs.writeFile(path.join(dockerAssetDir, "Dockerfile"), "FROM node:24");
+    await fs.writeFile(path.join(fileAssetDir, "index.js"), "console.log('hello')");
+
+    const entries = await fs.readdir(testDir);
+    const result = await collectDockerImageAssetPaths(entries, testDir);
+
+    expect(result.size).toBe(1);
+    expect(result.has(dockerAssetDir)).toBe(true);
+    expect(result.has(fileAssetDir)).toBe(false);
   });
 });

@@ -1,7 +1,11 @@
 import { promises as fs } from "fs";
 import path from "path";
 import { calculateSize, formatSize } from "./utils.js";
-import { deleteDockerImages, extractDockerImageHash } from "./docker-cleanup.js";
+import {
+  collectDockerImageAssetPaths,
+  deleteDockerImages,
+  extractDockerImageHash,
+} from "./docker-cleanup.js";
 
 export interface CleanupOptions {
   outdir: string;
@@ -32,6 +36,9 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
   // Scan directory items
   const entries = await fs.readdir(outdir);
 
+  // Collect all Docker image asset paths (both active and to-be-deleted)
+  const allDockerImageAssetPaths = await collectDockerImageAssetPaths(entries, outdir);
+
   const itemsToDelete = (
     await Promise.all(
       entries
@@ -44,10 +51,13 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
           }
 
           const size = await calculateSize(itemPath);
-          return { path: itemPath, size };
+          const isDockerImageAsset = allDockerImageAssetPaths.has(itemPath);
+          return { path: itemPath, size, isDockerImageAsset };
         }),
     )
-  ).filter((item): item is { path: string; size: number } => item !== null);
+  ).filter(
+    (item): item is { path: string; size: number; isDockerImageAsset: boolean } => item !== null,
+  );
 
   // Display results
   if (itemsToDelete.length === 0) {
@@ -57,12 +67,13 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
 
   console.log(`Found ${itemsToDelete.length} unused item(s):`);
 
-  // Display items and collect Docker image hashes
+  // Display items and collect Docker image hashes (from Docker image assets only)
   const dockerImageHashes = itemsToDelete
     .map((item) => {
       const relativePath = path.relative(outdir, item.path);
       console.log(`  - ${relativePath} (${formatSize(item.size)})`);
-      return extractDockerImageHash(item.path);
+      // Extract hash only for Docker image assets
+      return item.isDockerImageAsset ? extractDockerImageHash(item.path) : null;
     })
     .filter((hash): hash is string => hash !== null);
 
