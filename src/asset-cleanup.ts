@@ -106,8 +106,8 @@ async function collectAssetPaths(dirPath: string): Promise<Set<string>> {
   for (const item of items) {
     const itemPath = path.join(dirPath, item.name);
 
-    // Recursively scan subdirectories (e.g., assembly-MyStage/)
-    if (item.isDirectory()) {
+    // Only scan assembly-* subdirectories to avoid infinite loops
+    if (item.isDirectory() && item.name.startsWith("assembly-")) {
       const subPaths = await collectAssetPaths(itemPath);
       subPaths.forEach((p) => activePaths.add(p));
       continue;
