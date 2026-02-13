@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/go-to-k/cdk-agc/compare/v1.8.0...v1.9.0) (2026-02-13)
+
+
+### Features
+
+* improve assets size message ([#32](https://github.com/go-to-k/cdk-agc/issues/32)) ([6e656a8](https://github.com/go-to-k/cdk-agc/commit/6e656a889114be89af68acd2c714d7f23fa43bcb))
+
 # [1.8.0](https://github.com/go-to-k/cdk-agc/compare/v1.7.0...v1.8.0) (2026-02-13)
 
 
