@@ -1,6 +1,7 @@
 import { execSync } from "child_process";
 import { promises as fs } from "fs";
 import path from "path";
+import { formatSize } from "./utils.js";
 
 /**
  * Check if asset directories contain Dockerfile to identify Docker image assets
@@ -51,13 +52,16 @@ export async function deleteDockerImages(hashes: string[], dryRun: boolean): Pro
     return;
   }
 
-  // Get all Docker images once
+  // Get all Docker images once with size information
   let allImagesOutput: string;
   try {
-    allImagesOutput = execSync(`docker images --format "{{.Repository}}:{{.Tag}}\t{{.ID}}"`, {
-      encoding: "utf-8",
-      stdio: "pipe",
-    });
+    allImagesOutput = execSync(
+      `docker images --format "{{.Repository}}:{{.Tag}}\t{{.ID}}\t{{.Size}}"`,
+      {
+        encoding: "utf-8",
+        stdio: "pipe",
+      },
+    );
   } catch {
     // Docker not available or error - warn user
     console.warn(
@@ -74,8 +78,14 @@ export async function deleteDockerImages(hashes: string[], dryRun: boolean): Pro
 
   console.log("");
 
+  let totalDockerSize = 0;
   for (const hash of existingHashes) {
-    await deleteDockerImageFromOutput(hash, allImagesOutput, dryRun);
+    const size = await deleteDockerImageFromOutput(hash, allImagesOutput, dryRun);
+    totalDockerSize += size;
+  }
+
+  if (totalDockerSize > 0) {
+    console.log(`\nTotal Docker image size to reclaim: ${formatSize(totalDockerSize)}`);
   }
 
   console.log("");
@@ -103,29 +113,37 @@ function imageExistsInOutput(hash: string, allImagesOutput: string): boolean {
 
 /**
  * Delete Docker image by hash value using pre-fetched docker images output
+ * Returns the size of the image in bytes
  */
 async function deleteDockerImageFromOutput(
   hash: string,
   allImagesOutput: string,
   dryRun: boolean,
-): Promise<void> {
-  // Search all images for all tags with this hash
-  const allTags = allImagesOutput
+): Promise<number> {
+  // Search all images for all tags with this hash and extract size
+  const matchingLines = allImagesOutput
     .split("\n")
     .filter((line) => line.trim())
-    .map((line) => line.split("\t")[0])
+    .map((line) => {
+      const [tag, id, size] = line.split("\t");
+      return { tag, id, size };
+    })
     .filter(
-      (tag) =>
+      ({ tag }) =>
         tag === `cdkasset-${hash}:latest` ||
         (tag.endsWith(`:${hash}`) && tag.includes("container-assets")),
     );
 
-  if (allTags.length === 0) {
-    return;
+  if (matchingLines.length === 0) {
+    return 0;
   }
 
+  const allTags = matchingLines.map(({ tag }) => tag);
+  // Use the size from the first matching image (all tags point to the same image)
+  const imageSize = parseDockerSize(matchingLines[0].size);
+
   console.log(
-    `Found Docker image with ${allTags.length} tag(s) (asset.${hash.substring(0, 8)}...):`,
+    `Found Docker image with ${allTags.length} tag(s) (asset.${hash.substring(0, 8)}...) [${formatSize(imageSize)}]:`,
   );
   allTags.forEach((tag) => {
     console.log(`  - ${tag}`);
@@ -142,4 +160,27 @@ async function deleteDockerImageFromOutput(
       }
     }
   }
+
+  return imageSize;
+}
+
+/**
+ * Parse Docker image size string to bytes
+ */
+export function parseDockerSize(sizeStr: string): number {
+  const match = sizeStr.match(/^([\d.]+)\s*([KMGT]?B)$/i);
+  if (!match) return 0;
+
+  const value = parseFloat(match[1]);
+  const unit = match[2].toUpperCase();
+
+  const multipliers: Record<string, number> = {
+    B: 1,
+    KB: 1024,
+    MB: 1024 * 1024,
+    GB: 1024 * 1024 * 1024,
+    TB: 1024 * 1024 * 1024 * 1024,
+  };
+
+  return Math.round(value * (multipliers[unit] || 1));
 }
