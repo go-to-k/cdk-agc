@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/go-to-k/cdk-agc/compare/v1.4.1...v1.5.0) (2026-02-13)
+
+
+### Features
+
+* modify messages for docker deletion ([#28](https://github.com/go-to-k/cdk-agc/issues/28)) ([2cb2482](https://github.com/go-to-k/cdk-agc/commit/2cb24822fea50ef12675da397f1e656a4ed05ba6))
+
 ## [1.4.1](https://github.com/go-to-k/cdk-agc/compare/v1.4.0...v1.4.1) (2026-02-12)
 
 
