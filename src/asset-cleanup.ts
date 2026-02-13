@@ -90,7 +90,6 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
     dockerImageSize = await deleteDockerImages(dockerImageHashes, dryRun);
   }
 
-  // Display grand total
   console.log(
     `Total size to reclaim (assets + Docker images): ${formatSize(totalSize + dockerImageSize)}\n`,
   );
