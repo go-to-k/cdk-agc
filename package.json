@@ -1,6 +1,6 @@
 {
   "name": "cdk-agc",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "CDK Assembly Garbage Collector - Clean up unused assets in cdk.out",
   "type": "module",
   "bin": {
