@@ -148,6 +148,7 @@ async function deleteDockerImageFromOutput(
   allTags.forEach((tag) => {
     console.log(`  - ${tag}`);
   });
+  console.log("");
 
   if (!dryRun) {
     for (const tag of allTags) {
