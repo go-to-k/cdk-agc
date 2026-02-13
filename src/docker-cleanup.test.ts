@@ -3,6 +3,7 @@ import {
   collectDockerImageAssetPaths,
   deleteDockerImages,
   extractDockerImageHash,
+  parseDockerSize,
 } from "./docker-cleanup.js";
 import { execSync } from "child_process";
 import { promises as fs } from "fs";
@@ -159,8 +160,8 @@ describe("deleteDockerImages", () => {
     const hash = "f575bdffb1fb794e3010c609b768095d4f1d64e2dca5ce27938971210488a04d";
     const imageId = "cd626b785a64";
 
-    // Mock: search all images
-    const allImagesOutput = `cdkasset-${hash}:latest\t${imageId}\n123456789012.dkr.ecr.us-east-1.amazonaws.com/cdk-hnb659fds-container-assets-123456789012-us-east-1:${hash}\t${imageId}`;
+    // Mock: search all images with size
+    const allImagesOutput = `cdkasset-${hash}:latest\t${imageId}\t269.4MB\n123456789012.dkr.ecr.us-east-1.amazonaws.com/cdk-hnb659fds-container-assets-123456789012-us-east-1:${hash}\t${imageId}\t269.4MB`;
     mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
 
     // Mock: docker rmi for local tag
@@ -178,7 +179,7 @@ describe("deleteDockerImages", () => {
     const imageId = "9cd584f88ee2";
 
     // Mock: search all images and find ECR format (no local format)
-    const allImagesOutput = `123456789012.dkr.ecr.us-east-1.amazonaws.com/cdk-hnb659fds-container-assets-123456789012-us-east-1:${hash}\t${imageId}\ncdkasset-other:latest\tabcd1234`;
+    const allImagesOutput = `123456789012.dkr.ecr.us-east-1.amazonaws.com/cdk-hnb659fds-container-assets-123456789012-us-east-1:${hash}\t${imageId}\t100MB\ncdkasset-other:latest\tabcd1234\t50MB`;
     mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
 
     // Mock: docker rmi for ECR tag succeeds
@@ -193,7 +194,7 @@ describe("deleteDockerImages", () => {
     const hash = "nonexistent0000000000000000000000000000000000000000000000000000000";
 
     // Mock: no matching images in all images
-    const allImagesOutput = `cdkasset-other:latest\tabcd1234`;
+    const allImagesOutput = `cdkasset-other:latest\tabcd1234\t50MB`;
     mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
 
     await deleteDockerImages([hash], false);
@@ -207,7 +208,7 @@ describe("deleteDockerImages", () => {
 
     // Mock: search all images
     const localTag = `cdkasset-${hash}:latest`;
-    const allImagesOutput = `${localTag}\t${imageId}`;
+    const allImagesOutput = `${localTag}\t${imageId}\t100MB`;
     mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
 
     await deleteDockerImages([hash], true);
@@ -224,7 +225,7 @@ describe("deleteDockerImages", () => {
     const imageId = "cd626b785a64";
 
     // Mock: search all images
-    const allImagesOutput = `cdkasset-${hash}:latest\t${imageId}`;
+    const allImagesOutput = `cdkasset-${hash}:latest\t${imageId}\t100MB`;
     mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
 
     // Mock: docker rmi fails (e.g., image in use)
@@ -256,7 +257,7 @@ describe("deleteDockerImages", () => {
     const hash = "f575bdffb1fb794e3010c609b768095d4f1d64e2dca5ce27938971210488a04d";
 
     // Mock: search all images - has matching hash but not CDK-related (no cdkasset- or container-assets)
-    const allImagesOutput = `my-custom-repo:${hash}\tabcd1234\nother-repo/image:latest\tef567890`;
+    const allImagesOutput = `my-custom-repo:${hash}\tabcd1234\t100MB\nother-repo/image:latest\tef567890\t50MB`;
     mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
 
     await deleteDockerImages([hash], false);
@@ -270,7 +271,7 @@ describe("deleteDockerImages", () => {
     const imageId = "9cd584f88ee2";
 
     // Mock: search all images and find ECR URI with full format
-    const allImagesOutput = `123456789012.dkr.ecr.us-east-1.amazonaws.com/cdk-hnb659fds-container-assets-123456789012-us-east-1:${hash}\t${imageId}`;
+    const allImagesOutput = `123456789012.dkr.ecr.us-east-1.amazonaws.com/cdk-hnb659fds-container-assets-123456789012-us-east-1:${hash}\t${imageId}\t150MB`;
     mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
 
     // Mock: docker rmi succeeds
@@ -295,7 +296,7 @@ describe("deleteDockerImages", () => {
     const imageId2 = "9cd584f88ee2";
 
     // Mock: search all images once for both hashes
-    const allImagesOutput = `cdkasset-${hash1}:latest\t${imageId1}\ncdkasset-${hash2}:latest\t${imageId2}`;
+    const allImagesOutput = `cdkasset-${hash1}:latest\t${imageId1}\t100MB\ncdkasset-${hash2}:latest\t${imageId2}\t200MB`;
     mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
 
     // Mock: docker rmi for both images
@@ -306,5 +307,63 @@ describe("deleteDockerImages", () => {
 
     // Should only search once, then delete both - total 3 calls
     expect(mockedExecSync).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe("parseDockerSize", () => {
+  it("should parse bytes", () => {
+    expect(parseDockerSize("512B")).toBe(512);
+    expect(parseDockerSize("1B")).toBe(1);
+  });
+
+  it("should parse kilobytes", () => {
+    expect(parseDockerSize("1KB")).toBe(1024);
+    expect(parseDockerSize("1.5KB")).toBe(1536);
+    expect(parseDockerSize("10KB")).toBe(10240);
+  });
+
+  it("should parse megabytes", () => {
+    expect(parseDockerSize("1MB")).toBe(1024 * 1024);
+    expect(parseDockerSize("2.5MB")).toBe(Math.round(2.5 * 1024 * 1024));
+    expect(parseDockerSize("269.4MB")).toBe(Math.round(269.4 * 1024 * 1024));
+  });
+
+  it("should parse gigabytes", () => {
+    expect(parseDockerSize("1GB")).toBe(1024 * 1024 * 1024);
+    expect(parseDockerSize("1.5GB")).toBe(Math.round(1.5 * 1024 * 1024 * 1024));
+  });
+
+  it("should parse terabytes", () => {
+    expect(parseDockerSize("1TB")).toBe(1024 * 1024 * 1024 * 1024);
+    expect(parseDockerSize("2.5TB")).toBe(Math.round(2.5 * 1024 * 1024 * 1024 * 1024));
+  });
+
+  it("should handle lowercase units", () => {
+    expect(parseDockerSize("1kb")).toBe(1024);
+    expect(parseDockerSize("1mb")).toBe(1024 * 1024);
+    expect(parseDockerSize("1gb")).toBe(1024 * 1024 * 1024);
+  });
+
+  it("should handle mixed case units", () => {
+    expect(parseDockerSize("1Mb")).toBe(1024 * 1024);
+    expect(parseDockerSize("1gB")).toBe(1024 * 1024 * 1024);
+  });
+
+  it("should handle spaces between number and unit", () => {
+    expect(parseDockerSize("1 MB")).toBe(1024 * 1024);
+    expect(parseDockerSize("2.5 GB")).toBe(Math.round(2.5 * 1024 * 1024 * 1024));
+  });
+
+  it("should return 0 for invalid formats", () => {
+    expect(parseDockerSize("invalid")).toBe(0);
+    expect(parseDockerSize("")).toBe(0);
+    expect(parseDockerSize("MB")).toBe(0);
+    expect(parseDockerSize("123")).toBe(0);
+    expect(parseDockerSize("123XB")).toBe(0);
+  });
+
+  it("should handle decimal values correctly", () => {
+    expect(parseDockerSize("0.5MB")).toBe(Math.round(0.5 * 1024 * 1024));
+    expect(parseDockerSize("1.25GB")).toBe(Math.round(1.25 * 1024 * 1024 * 1024));
   });
 });
