@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/go-to-k/cdk-agc/compare/v1.5.0...v1.6.0) (2026-02-13)
+
+
+### Features
+
+* add size display for Docker images with total size summary ([#29](https://github.com/go-to-k/cdk-agc/issues/29)) ([eb16e98](https://github.com/go-to-k/cdk-agc/commit/eb16e982b2aa1211e7173e0cbe8ce6571f420a06))
+
 # [1.5.0](https://github.com/go-to-k/cdk-agc/compare/v1.4.1...v1.5.0) (2026-02-13)
 
 
