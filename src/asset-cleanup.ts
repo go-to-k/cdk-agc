@@ -85,9 +85,14 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
     );
   }
 
+  let dockerImageSize = 0;
   if (dockerImageHashes.length > 0) {
-    await deleteDockerImages(dockerImageHashes, dryRun);
+    dockerImageSize = await deleteDockerImages(dockerImageHashes, dryRun);
   }
+
+  console.log(
+    `Total size to reclaim (assets + Docker images): ${formatSize(totalSize + dockerImageSize)}\n`,
+  );
 
   if (dryRun) {
     console.log("Dry-run mode: No assets were deleted.");

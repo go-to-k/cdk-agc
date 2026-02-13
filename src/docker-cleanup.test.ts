@@ -308,6 +308,71 @@ describe("deleteDockerImages", () => {
     // Should only search once, then delete both - total 3 calls
     expect(mockedExecSync).toHaveBeenCalledTimes(3);
   });
+
+  it("should return total size of deleted Docker images", async () => {
+    const hash1 = "f575bdffb1fb794e3010c609b768095d4f1d64e2dca5ce27938971210488a04d";
+    const hash2 = "9ae778431447a6965dbd163b99646b5275c91c065727748fa16e8ccc29e9dd42";
+    const imageId1 = "cd626b785a64";
+    const imageId2 = "9cd584f88ee2";
+
+    // Mock: search all images - 100MB + 200MB = 300MB total
+    const allImagesOutput = `cdkasset-${hash1}:latest\t${imageId1}\t100MB\ncdkasset-${hash2}:latest\t${imageId2}\t200MB`;
+    mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
+
+    // Mock: docker rmi for both images
+    mockedExecSync.mockReturnValueOnce("" as any);
+    mockedExecSync.mockReturnValueOnce("" as any);
+
+    const totalSize = await deleteDockerImages([hash1, hash2], false);
+
+    // Should return 100MB + 200MB = 300MB in bytes
+    expect(totalSize).toBe(100 * 1024 * 1024 + 200 * 1024 * 1024);
+  });
+
+  it("should return 0 when no images are found", async () => {
+    const hash = "nonexistent0000000000000000000000000000000000000000000000000000000";
+
+    // Mock: no matching images
+    const allImagesOutput = `other-image:latest\tabcd1234\t50MB`;
+    mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
+
+    const totalSize = await deleteDockerImages([hash], false);
+
+    expect(totalSize).toBe(0);
+  });
+
+  it("should return 0 when empty array is provided", async () => {
+    const totalSize = await deleteDockerImages([], false);
+
+    expect(totalSize).toBe(0);
+  });
+
+  it("should return 0 when Docker daemon is not running", async () => {
+    const hash = "f575bdffb1fb794e3010c609b768095d4f1d64e2dca5ce27938971210488a04d";
+
+    // Mock: Docker command fails
+    mockedExecSync.mockImplementationOnce(() => {
+      throw new Error("Docker not running");
+    });
+
+    const totalSize = await deleteDockerImages([hash], false);
+
+    expect(totalSize).toBe(0);
+  });
+
+  it("should return correct size in dry-run mode", async () => {
+    const hash = "f575bdffb1fb794e3010c609b768095d4f1d64e2dca5ce27938971210488a04d";
+    const imageId = "cd626b785a64";
+
+    // Mock: search all images - 269.4MB
+    const allImagesOutput = `cdkasset-${hash}:latest\t${imageId}\t269.4MB`;
+    mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
+
+    const totalSize = await deleteDockerImages([hash], true);
+
+    // Should return size even in dry-run mode
+    expect(totalSize).toBe(Math.round(269.4 * 1024 * 1024));
+  });
 });
 
 describe("parseDockerSize", () => {

@@ -510,7 +510,7 @@ describe("cleanupAssets", () => {
     );
 
     const mockedDeleteDockerImages = vi.mocked(dockerCleanup.deleteDockerImages);
-    mockedDeleteDockerImages.mockResolvedValue(undefined);
+    mockedDeleteDockerImages.mockResolvedValue(0);
 
     await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 });
 
@@ -542,7 +542,7 @@ describe("cleanupAssets", () => {
     );
 
     const mockedDeleteDockerImages = vi.mocked(dockerCleanup.deleteDockerImages);
-    mockedDeleteDockerImages.mockResolvedValue(undefined);
+    mockedDeleteDockerImages.mockResolvedValue(0);
 
     await cleanupAssets({ outdir: TEST_DIR, dryRun: true, keepHours: 0 });
 
