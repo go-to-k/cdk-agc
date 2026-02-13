@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/go-to-k/cdk-agc/compare/v1.6.0...v1.7.0) (2026-02-13)
+
+
+### Features
+
+* add total size summary for assets and Docker images ([#30](https://github.com/go-to-k/cdk-agc/issues/30)) ([b8aa9e1](https://github.com/go-to-k/cdk-agc/commit/b8aa9e1210d6d1cf291dc7612bd9a4e10fd882d4))
+
 # [1.6.0](https://github.com/go-to-k/cdk-agc/compare/v1.5.0...v1.6.0) (2026-02-13)
 
 
