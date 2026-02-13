@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/go-to-k/cdk-agc/compare/v1.9.0...v1.10.0) (2026-02-13)
+
+
+### Features
+
+* modify message format ([#33](https://github.com/go-to-k/cdk-agc/issues/33)) ([30c6651](https://github.com/go-to-k/cdk-agc/commit/30c6651387f8704d85e83fc4b5ca1c9f3b01cc06))
+
 # [1.9.0](https://github.com/go-to-k/cdk-agc/compare/v1.8.0...v1.9.0) (2026-02-13)
 
 
