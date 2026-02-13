@@ -147,7 +147,7 @@ async function deleteDockerImageFromOutput(
   const imageSize = parseDockerSize(matchingLines[0].size);
 
   console.log(
-    `Found Docker image with ${allTags.length} tag(s) (asset.${hash.substring(0, 8)}...) [${formatSize(imageSize)}]:`,
+    `Found Docker image with ${allTags.length} tag(s) [asset.${hash.substring(0, 8)}...] (${formatSize(imageSize)}):`,
   );
   allTags.forEach((tag) => {
     console.log(`  - ${tag}`);
