@@ -72,8 +72,7 @@ export async function deleteDockerImages(hashes: string[], dryRun: boolean): Pro
     return;
   }
 
-  const count = existingHashes.length;
-  console.log(`\nFound ${count} Docker image(s):`);
+  console.log("");
 
   for (const hash of existingHashes) {
     await deleteDockerImageFromOutput(hash, allImagesOutput, dryRun);
@@ -125,6 +124,9 @@ async function deleteDockerImageFromOutput(
     return;
   }
 
+  console.log(
+    `Found Docker image with ${allTags.length} tag(s) (asset.${hash.substring(0, 8)}...):`,
+  );
   allTags.forEach((tag) => {
     console.log(`  - ${tag}`);
   });
