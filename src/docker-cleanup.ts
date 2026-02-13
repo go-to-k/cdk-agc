@@ -85,7 +85,7 @@ export async function deleteDockerImages(hashes: string[], dryRun: boolean): Pro
   }
 
   if (totalDockerSize > 0) {
-    console.log(`\nTotal Docker image size to reclaim: ${formatSize(totalDockerSize)}`);
+    console.log(`Total Docker image size to reclaim: ${formatSize(totalDockerSize)}`);
   }
 
   console.log("");
