@@ -77,7 +77,7 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
     .filter((hash): hash is string => hash !== null);
 
   const totalSize = itemsToDelete.reduce((sum, item) => sum + item.size, 0);
-  console.log(`\nTotal size to reclaim: ${formatSize(totalSize)}\n`);
+  console.log(`\nTotal assets size to reclaim: ${formatSize(totalSize)}\n`);
 
   if (!dryRun) {
     await Promise.all(
