@@ -46,10 +46,11 @@ export function extractDockerImageHash(assetPath: string): string | null {
 /**
  * Delete multiple Docker images by hash values
  * Only prints header if at least one image is found
+ * Returns the total size of Docker images in bytes
  */
-export async function deleteDockerImages(hashes: string[], dryRun: boolean): Promise<void> {
+export async function deleteDockerImages(hashes: string[], dryRun: boolean): Promise<number> {
   if (hashes.length === 0) {
-    return;
+    return 0;
   }
 
   // Get all Docker images once with size information
@@ -67,13 +68,13 @@ export async function deleteDockerImages(hashes: string[], dryRun: boolean): Pro
     console.warn(
       `\nWarning: Cannot check Docker images (Docker daemon may not be running). Skipping Docker cleanup.`,
     );
-    return;
+    return 0;
   }
 
   const existingHashes = hashes.filter((hash) => imageExistsInOutput(hash, allImagesOutput));
 
   if (existingHashes.length === 0) {
-    return;
+    return 0;
   }
 
   console.log("");
@@ -89,6 +90,8 @@ export async function deleteDockerImages(hashes: string[], dryRun: boolean): Pro
   }
 
   console.log("");
+
+  return totalDockerSize;
 }
 
 /**
