@@ -1,3 +1,10 @@
+# [1.11.0](https://github.com/go-to-k/cdk-agc/compare/v1.10.0...v1.11.0) (2026-02-14)
+
+
+### Features
+
+* use modern Docker CLI syntax (image ls/rm) ([#34](https://github.com/go-to-k/cdk-agc/issues/34)) ([ebc1288](https://github.com/go-to-k/cdk-agc/commit/ebc1288f1199cb0b6992894f8e2b69571e736329))
+
 # [1.10.0](https://github.com/go-to-k/cdk-agc/compare/v1.9.0...v1.10.0) (2026-02-13)
 
 
