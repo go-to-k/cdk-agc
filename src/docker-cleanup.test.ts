@@ -164,9 +164,9 @@ describe("deleteDockerImages", () => {
     const allImagesOutput = `cdkasset-${hash}:latest\t${imageId}\t269.4MB\n123456789012.dkr.ecr.us-east-1.amazonaws.com/cdk-hnb659fds-container-assets-123456789012-us-east-1:${hash}\t${imageId}\t269.4MB`;
     mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
 
-    // Mock: docker rmi for local tag
+    // Mock: docker image rm for local tag
     mockedExecSync.mockReturnValueOnce("" as any);
-    // Mock: docker rmi for ECR tag
+    // Mock: docker image rm for ECR tag
     mockedExecSync.mockReturnValueOnce("" as any);
 
     await deleteDockerImages([hash], false);
@@ -182,7 +182,7 @@ describe("deleteDockerImages", () => {
     const allImagesOutput = `123456789012.dkr.ecr.us-east-1.amazonaws.com/cdk-hnb659fds-container-assets-123456789012-us-east-1:${hash}\t${imageId}\t100MB\ncdkasset-other:latest\tabcd1234\t50MB`;
     mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
 
-    // Mock: docker rmi for ECR tag succeeds
+    // Mock: docker image rm for ECR tag succeeds
     mockedExecSync.mockReturnValueOnce("" as any);
 
     await deleteDockerImages([hash], false);
@@ -215,12 +215,12 @@ describe("deleteDockerImages", () => {
 
     expect(mockedExecSync).toHaveBeenCalledTimes(1); // Only search, no delete
     expect(mockedExecSync).not.toHaveBeenCalledWith(
-      expect.stringContaining("docker rmi"),
+      expect.stringContaining("docker image rm"),
       expect.anything(),
     );
   });
 
-  it("should handle docker rmi errors gracefully", async () => {
+  it("should handle docker image rm errors gracefully", async () => {
     const hash = "f575bdffb1fb794e3010c609b768095d4f1d64e2dca5ce27938971210488a04d";
     const imageId = "cd626b785a64";
 
@@ -228,7 +228,7 @@ describe("deleteDockerImages", () => {
     const allImagesOutput = `cdkasset-${hash}:latest\t${imageId}\t100MB`;
     mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
 
-    // Mock: docker rmi fails (e.g., image in use)
+    // Mock: docker image rm fails (e.g., image in use)
     mockedExecSync.mockImplementationOnce(() => {
       throw new Error("Error response from daemon: conflict: unable to delete");
     });
@@ -274,7 +274,7 @@ describe("deleteDockerImages", () => {
     const allImagesOutput = `123456789012.dkr.ecr.us-east-1.amazonaws.com/cdk-hnb659fds-container-assets-123456789012-us-east-1:${hash}\t${imageId}\t150MB`;
     mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
 
-    // Mock: docker rmi succeeds
+    // Mock: docker image rm succeeds
     mockedExecSync.mockReturnValueOnce("" as any);
 
     await deleteDockerImages([hash], false);
@@ -299,7 +299,7 @@ describe("deleteDockerImages", () => {
     const allImagesOutput = `cdkasset-${hash1}:latest\t${imageId1}\t100MB\ncdkasset-${hash2}:latest\t${imageId2}\t200MB`;
     mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
 
-    // Mock: docker rmi for both images
+    // Mock: docker image rm for both images
     mockedExecSync.mockReturnValueOnce("" as any);
     mockedExecSync.mockReturnValueOnce("" as any);
 
@@ -319,7 +319,7 @@ describe("deleteDockerImages", () => {
     const allImagesOutput = `cdkasset-${hash1}:latest\t${imageId1}\t100MB\ncdkasset-${hash2}:latest\t${imageId2}\t200MB`;
     mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
 
-    // Mock: docker rmi for both images
+    // Mock: docker image rm for both images
     mockedExecSync.mockReturnValueOnce("" as any);
     mockedExecSync.mockReturnValueOnce("" as any);
 

@@ -57,7 +57,7 @@ export async function deleteDockerImages(hashes: string[], dryRun: boolean): Pro
   let allImagesOutput: string;
   try {
     allImagesOutput = execSync(
-      `docker images --format "{{.Repository}}:{{.Tag}}\t{{.ID}}\t{{.Size}}"`,
+      `docker image ls --format "{{.Repository}}:{{.Tag}}\t{{.ID}}\t{{.Size}}"`,
       {
         encoding: "utf-8",
         stdio: "pipe",
@@ -157,7 +157,7 @@ async function deleteDockerImageFromOutput(
   if (!dryRun) {
     for (const tag of allTags) {
       try {
-        execSync(`docker rmi ${tag}`, { stdio: "pipe" });
+        execSync(`docker image rm ${tag}`, { stdio: "pipe" });
       } catch (error) {
         console.warn(
           `    Warning: Failed to delete Docker image ${tag}: ${error instanceof Error ? error.message : String(error)}`,
