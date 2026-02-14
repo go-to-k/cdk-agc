@@ -1,3 +1,10 @@
+# [1.12.0](https://github.com/go-to-k/cdk-agc/compare/v1.11.0...v1.12.0) (2026-02-14)
+
+
+### Features
+
+* improve message lines ([#35](https://github.com/go-to-k/cdk-agc/issues/35)) ([09f5d77](https://github.com/go-to-k/cdk-agc/commit/09f5d77eeb40363a51f7eb6284b6797624e38c60))
+
 # [1.11.0](https://github.com/go-to-k/cdk-agc/compare/v1.10.0...v1.11.0) (2026-02-14)
 
 
