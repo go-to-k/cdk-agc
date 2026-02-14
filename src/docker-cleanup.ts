@@ -90,7 +90,6 @@ export async function deleteDockerImages(hashes: string[], dryRun: boolean): Pro
   }
 
   console.log("");
-  console.log("");
 
   return totalDockerSize;
 }
