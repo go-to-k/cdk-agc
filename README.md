@@ -1,15 +1,18 @@
 # cdk-agc
 
-**CDK Assembly Garbage Collector** - Clean up unused assets in your `cdk.out` directory.
+**CDK Assembly Garbage Collector** - Clean up unused assets in your `cdk.out` directory, remove locally built Docker images, and delete temporary CDK directories.
 
 ## Overview
 
-`cdk-agc` is a fast CLI tool that scans your AWS CDK cloud assembly directory and helps you reclaim disk space:
+`cdk-agc` is a fast CLI tool that helps you reclaim disk space from AWS CDK builds:
 
 - **Clean `cdk.out` directories**: Remove unused assets while protecting referenced files
   - Only deletes unreferenced `asset.*` directories and files - all other files are automatically protected
   - Protects recently modified files (configurable with `-k/--keep-hours`)
-  - **Automatically removes Docker images** associated with deleted asset directories
+
+- **Remove locally built Docker images**: Clean up orphaned Docker images from CDK builds
+  - Automatically removes Docker images associated with deleted asset directories
+  - Displays size information for each image and total space to reclaim
 
 - **Clean temporary directories** (`-t/--cleanup-tmp`): Delete accumulated temporary CDK directories in `$TMPDIR`
   - Deletes entire directories
