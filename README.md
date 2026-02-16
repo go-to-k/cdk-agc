@@ -2,8 +2,6 @@
 
 **CDK Assembly Garbage Collector** - Clean up unused assets in your `cdk.out` directory, remove locally built Docker images, and delete temporary CDK directories.
 
-![cdk-agc](https://github.com/user-attachments/assets/f8d90fea-a7f7-43c8-bb71-a2f41a7a1afb)
-
 ```txt
 ❯ npx cdk-agc
 Scanning /Users/goto/cdk-sample/cdk.out
