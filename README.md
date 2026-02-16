@@ -2,6 +2,36 @@
 
 **CDK Assembly Garbage Collector** - Clean up unused assets in your `cdk.out` directory, remove locally built Docker images, and delete temporary CDK directories.
 
+![cdk-agc](https://github.com/user-attachments/assets/f8d90fea-a7f7-43c8-bb71-a2f41a7a1afb)
+
+```txt
+❯ npx cdk-agc
+Scanning /Users/goto/cdk-sample/cdk.out
+
+Found 3 unused item(s):
+  - asset.1b74676f43a7db3c2b7b40ca7b8ae1cffa9314da05f888ba85f0e5bdbba35091 (1.12 KB)
+  - asset.7f5b2d8f2821e1a7ee63c1c38d8f426be6e9fdd7af690d39ec195cafb65268d5 (269.82 MB)
+  - asset.f2b4b696b62c99483eae61ae7dba459c039b020077a8058a61252b5cb50f93e9 (269.82 MB)
+
+Total assets size to reclaim: 539.64 MB
+
+
+Found Docker image with 2 tag(s) [asset.7f5b2d8f...] (436.00 MB):
+  - 123456789012.dkr.ecr.us-east-1.amazonaws.com/cdk-hnb659fds-container-assets-123456789012-us-east-1:7f5b2d8f2821e1a7ee63c1c38d8f426be6e9fdd7af690d39ec195cafb65268d5
+  - cdkasset-7f5b2d8f2821e1a7ee63c1c38d8f426be6e9fdd7af690d39ec195cafb65268d5:latest
+
+Found Docker image with 2 tag(s) [asset.f2b4b696...] (436.00 MB):
+  - 123456789012.dkr.ecr.us-east-1.amazonaws.com/cdk-hnb659fds-container-assets-123456789012-us-east-1:f2b4b696b62c99483eae61ae7dba459c039b020077a8058a61252b5cb50f93e9
+  - cdkasset-f2b4b696b62c99483eae61ae7dba459c039b020077a8058a61252b5cb50f93e9:latest
+
+Total Docker image size to reclaim: 872.00 MB
+
+
+Total size to reclaim (assets + Docker images): 1.38 GB
+
+✓ Cleanup completed successfully.
+```
+
 ## Overview
 
 `cdk-agc` is a fast CLI tool that helps you reclaim disk space from AWS CDK builds:
