@@ -373,6 +373,41 @@ describe("deleteDockerImages", () => {
     // Should return size even in dry-run mode
     expect(totalSize).toBe(Math.round(269.4 * 1024 * 1024));
   });
+
+  describe("with CDK_DOCKER environment variable", () => {
+    const originalEnv = process.env.CDK_DOCKER;
+
+    afterEach(() => {
+      if (originalEnv === undefined) {
+        delete process.env.CDK_DOCKER;
+      } else {
+        process.env.CDK_DOCKER = originalEnv;
+      }
+    });
+
+    it("should use CDK_DOCKER command instead of docker", async () => {
+      process.env.CDK_DOCKER = "finch";
+      const hash = "f575bdffb1fb794e3010c609b768095d4f1d64e2dca5ce27938971210488a04d";
+      const imageId = "cd626b785a64";
+
+      // Mock: search all images
+      const allImagesOutput = `cdkasset-${hash}:latest\t${imageId}\t100MB`;
+      mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
+      // Mock: image rm
+      mockedExecSync.mockReturnValueOnce("" as any);
+
+      await deleteDockerImages([hash], false);
+
+      expect(mockedExecSync).toHaveBeenCalledWith(
+        expect.stringContaining("finch image ls"),
+        expect.anything(),
+      );
+      expect(mockedExecSync).toHaveBeenCalledWith(
+        expect.stringContaining("finch image rm"),
+        expect.anything(),
+      );
+    });
+  });
 });
 
 describe("parseDockerSize", () => {
