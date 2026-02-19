@@ -165,6 +165,25 @@ npx cdk-agc -t
 npx cdk-agc -t -k 24
 ```
 
+## Docker Alternatives
+
+By default, `cdk-agc` uses the `docker` command to manage Docker images. You can override this with the `CDK_DOCKER` environment variable to use a drop-in replacement:
+
+```bash
+# Use Finch (AWS-supported Docker alternative)
+export CDK_DOCKER=finch
+npx cdk-agc
+
+# Use Podman
+export CDK_DOCKER=podman
+npx cdk-agc
+```
+
+> **Note**: Depending on your environment, you may also need to set the `DOCKER_HOST` environment variable to point to the container runtime's socket. For example:
+>
+> - **Finch** (macOS): `unix:///Applications/Finch/lima/data/finch/sock/finch.sock`
+> - **Podman**: `unix://$(podman machine inspect --format '{{.ConnectionInfo.PodmanSocket.Path}}')`
+
 ## Contributing
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for details.

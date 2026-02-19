@@ -4,6 +4,14 @@ import path from "path";
 import { formatSize } from "./utils.js";
 
 /**
+ * Get the Docker-compatible CLI command to use.
+ * Respects the CDK_DOCKER environment variable, defaulting to "docker".
+ */
+function getDockerCommand(): string {
+  return process.env.CDK_DOCKER ?? "docker";
+}
+
+/**
  * Check if asset directories contain Dockerfile to identify Docker image assets
  * @param assetEntries - Pre-filtered entries that start with "asset."
  * @param outdir - Directory path where assets are located
@@ -54,10 +62,11 @@ export async function deleteDockerImages(hashes: string[], dryRun: boolean): Pro
   }
 
   // Get all Docker images once with size information
+  const dockerCommand = getDockerCommand();
   let allImagesOutput: string;
   try {
     allImagesOutput = execSync(
-      `docker image ls --format "{{.Repository}}:{{.Tag}}\t{{.ID}}\t{{.Size}}"`,
+      `${dockerCommand} image ls --format "{{.Repository}}:{{.Tag}}\t{{.ID}}\t{{.Size}}"`,
       {
         encoding: "utf-8",
         stdio: "pipe",
@@ -66,7 +75,7 @@ export async function deleteDockerImages(hashes: string[], dryRun: boolean): Pro
   } catch {
     // Docker not available or error - warn user
     console.warn(
-      `\nWarning: Cannot check Docker images (Docker daemon may not be running). Skipping Docker cleanup.`,
+      `\nWarning: Cannot check Docker images (${dockerCommand} daemon may not be running). Skipping Docker cleanup.`,
     );
     return 0;
   }
@@ -154,9 +163,10 @@ async function deleteDockerImageFromOutput(
   console.log("");
 
   if (!dryRun) {
+    const dockerCommand = getDockerCommand();
     for (const tag of allTags) {
       try {
-        execSync(`docker image rm ${tag}`, { stdio: "pipe" });
+        execSync(`${dockerCommand} image rm ${tag}`, { stdio: "pipe" });
       } catch (error) {
         console.warn(
           `    Warning: Failed to delete Docker image ${tag}: ${error instanceof Error ? error.message : String(error)}`,
