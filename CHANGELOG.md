@@ -1,3 +1,10 @@
+# [1.13.0](https://github.com/go-to-k/cdk-agc/compare/v1.12.0...v1.13.0) (2026-02-19)
+
+
+### Features
+
+* support `CDK_DOCKER` environment variable for container runtime alternatives ([#39](https://github.com/go-to-k/cdk-agc/issues/39)) ([903beb0](https://github.com/go-to-k/cdk-agc/commit/903beb0812d3ee7548c60321ed26ce50e622bd8b))
+
 # [1.12.0](https://github.com/go-to-k/cdk-agc/compare/v1.11.0...v1.12.0) (2026-02-14)
 
 
