@@ -637,4 +637,27 @@ describe("cleanupAssets", () => {
     // Non-assembly directory itself should remain (only asset.* items are deletion candidates)
     expect(await fileExists("non-assembly-dir/Stack.assets.json")).toBe(true);
   });
+
+  it("should handle broken symbolic links gracefully", async () => {
+    await createTestManifest();
+
+    // Create an asset directory with a broken symlink
+    const assetDir = path.join(TEST_DIR, "asset.with-broken-symlink");
+    await fs.mkdir(assetDir, { recursive: true });
+    await fs.writeFile(path.join(assetDir, "normal-file.txt"), "normal content");
+
+    // Create broken symbolic link
+    await fs.symlink("/nonexistent/path/file.txt", path.join(assetDir, "broken-link.txt"));
+
+    // Verify the symlink is indeed broken
+    await expect(fs.access(path.join(assetDir, "broken-link.txt"))).rejects.toThrow();
+
+    // Should not throw ENOENT error
+    await expect(
+      cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 }),
+    ).resolves.not.toThrow();
+
+    // Asset directory with broken symlink should be deleted
+    expect(await fileExists("asset.with-broken-symlink")).toBe(false);
+  });
 });

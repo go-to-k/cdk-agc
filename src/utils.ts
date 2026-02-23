@@ -5,7 +5,25 @@ import path from "path";
  * Calculate size of file or directory
  */
 export async function calculateSize(itemPath: string): Promise<number> {
-  const stats = await fs.stat(itemPath);
+  let stats;
+  try {
+    stats = await fs.lstat(itemPath);
+  } catch {
+    // Skip items that can't be accessed
+    return 0;
+  }
+
+  // Handle symbolic links
+  if (stats.isSymbolicLink()) {
+    try {
+      // Try to get the real stats of the target
+      const realStats = await fs.stat(itemPath);
+      stats = realStats;
+    } catch {
+      // Broken symlink - count only the symlink itself
+      return stats.size;
+    }
+  }
 
   if (stats.isFile()) {
     return stats.size;
