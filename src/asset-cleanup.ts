@@ -174,15 +174,10 @@ async function isProtected(
 
   // Protect files/directories within retention period
   if (keepHours > 0) {
-    try {
-      const stats = await fs.lstat(itemPath);
-      const ageHours = (Date.now() - stats.mtimeMs) / (1000 * 60 * 60);
-      if (ageHours <= keepHours) {
-        return true;
-      }
-    } catch {
-      // If we can't get stats, don't protect it
-      return false;
+    const stats = await fs.stat(itemPath);
+    const ageHours = (Date.now() - stats.mtimeMs) / (1000 * 60 * 60);
+    if (ageHours <= keepHours) {
+      return true;
     }
   }
 

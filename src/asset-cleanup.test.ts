@@ -652,12 +652,12 @@ describe("cleanupAssets", () => {
     // Verify the symlink is indeed broken
     await expect(fs.access(path.join(assetDir, "broken-link.txt"))).rejects.toThrow();
 
-    // Should not throw ENOENT error
+    // Should not throw ENOENT error when calculateSize scans the directory
     await expect(
       cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 }),
     ).resolves.not.toThrow();
 
-    // Asset directory with broken symlink should be deleted
+    // Unreferenced asset with broken symlink should be deleted
     expect(await fileExists("asset.with-broken-symlink")).toBe(false);
   });
 });
