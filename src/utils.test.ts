@@ -86,16 +86,6 @@ describe("calculateSize", () => {
     expect(size).toBeGreaterThanOrEqual(0);
   });
 
-  it("should follow valid symbolic links", async () => {
-    const targetFile = path.join(TEST_DIR, "target.txt");
-    const linkFile = path.join(TEST_DIR, "link.txt");
-    await fs.writeFile(targetFile, "content");
-    await fs.symlink(targetFile, linkFile);
-
-    const size = await calculateSize(linkFile);
-    expect(size).toBe(7);
-  });
-
   it("should handle directory with broken symbolic links", async () => {
     await fs.writeFile(path.join(TEST_DIR, "normal.txt"), "test");
     await fs.symlink("/nonexistent/path", path.join(TEST_DIR, "broken-link"));

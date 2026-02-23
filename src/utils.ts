@@ -13,19 +13,7 @@ export async function calculateSize(itemPath: string): Promise<number> {
     return 0;
   }
 
-  // Handle symbolic links
-  if (stats.isSymbolicLink()) {
-    try {
-      // Try to get the real stats of the target
-      const realStats = await fs.stat(itemPath);
-      stats = realStats;
-    } catch {
-      // Broken symlink - count only the symlink itself
-      return stats.size;
-    }
-  }
-
-  if (stats.isFile()) {
+  if (stats.isFile() || stats.isSymbolicLink()) {
     return stats.size;
   }
 
