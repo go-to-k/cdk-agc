@@ -1,3 +1,10 @@
+## [1.13.1](https://github.com/go-to-k/cdk-agc/compare/v1.13.0...v1.13.1) (2026-02-23)
+
+
+### Bug Fixes
+
+* fail if including symlinks ([#41](https://github.com/go-to-k/cdk-agc/issues/41)) ([25b2b1c](https://github.com/go-to-k/cdk-agc/commit/25b2b1cd4c097fba54cd8c9ee12f867fef4caa1d))
+
 # [1.13.0](https://github.com/go-to-k/cdk-agc/compare/v1.12.0...v1.13.0) (2026-02-19)
 
 
