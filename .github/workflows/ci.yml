@@ -9,16 +9,13 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [20.19.2, 22.16.0, 24.14.0]
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: voidzero-dev/setup-vp@v1
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: "24.14.0"
           cache: true
 
       - name: Install dependencies
@@ -34,11 +31,38 @@ jobs:
         run: vp test --coverage
 
       - name: Integration Test
-        if: startsWith(matrix.node-version, '24')
         run: vp run test:integ
 
       - name: Upload coverage
-        if: startsWith(matrix.node-version, '24')
         uses: codecov/codecov-action@v5
         with:
           files: ./coverage/coverage-final.json
+
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  compat:
+    needs: test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [20.19.2, 22.16.0]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Download dist
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Verify CLI
+        run: node dist/cli.mjs --help
