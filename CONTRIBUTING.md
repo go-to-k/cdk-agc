@@ -267,8 +267,7 @@ vp exec semantic-release --no-ci
 
 **`.github/workflows/ci.yml`** - Runs on PRs and pushes:
 
-- Test job (Node.js 24): lint & format check, build, unit tests, integration tests, coverage upload
-- Compat job (Node.js 20, 22): verify built CLI runs correctly
+- Lint & format check, build, unit tests, integration tests, coverage upload
 
 ### Release (Automated Publishing)
 
