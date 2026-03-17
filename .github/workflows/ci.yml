@@ -64,5 +64,8 @@ jobs:
           name: dist
           path: dist/
 
+      - name: Install production dependencies
+        run: npm install --omit=dev
+
       - name: Verify CLI
         run: node dist/cli.mjs --help
