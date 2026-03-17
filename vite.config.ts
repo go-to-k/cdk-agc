@@ -31,11 +31,13 @@ export default defineConfig({
   },
   pack: {
     entry: ["src/**/*.ts", "!src/**/*.test.ts"],
+    root: "src",
     platform: "node",
     format: ["esm"],
     target: "node20",
     dts: true,
     clean: true,
+    fixedExtension: true,
     sourcemap: true,
     shims: true,
   },
