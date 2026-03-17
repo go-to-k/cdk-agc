@@ -4,6 +4,7 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "lib": ["ESNext"],
+    "types": ["node"],
     "strict": true,
     "skipLibCheck": true,
     "verbatimModuleSyntax": true,

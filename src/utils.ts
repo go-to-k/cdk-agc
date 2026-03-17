@@ -1,5 +1,5 @@
-import { promises as fs } from "fs";
-import path from "path";
+import { promises as fs } from "node:fs";
+import path from "node:path";
 
 /**
  * Calculate size of file or directory
@@ -32,7 +32,7 @@ export async function calculateSize(itemPath: string): Promise<number> {
  * Format bytes to human-readable string
  */
 export function formatSize(bytes: number): string {
-  const units = ["B", "KB", "MB", "GB"];
+  const units = ["B", "KB", "MB", "GB"] as const;
   let size = bytes;
   let unitIndex = 0;
 
@@ -41,5 +41,5 @@ export function formatSize(bytes: number): string {
     unitIndex++;
   }
 
-  return `${size.toFixed(2)} ${units[unitIndex]}`;
+  return `${size.toFixed(2)} ${units[unitIndex] ?? units[0]}`;
 }

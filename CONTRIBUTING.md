@@ -6,30 +6,25 @@ Thank you for your interest in contributing to cdk-agc!
 
 ### Prerequisites
 
-- **Node.js 24+** (recommended via [mise](https://mise.jdx.dev/))
-- **pnpm >= 10.0.0**
+- **Node.js 24+**
+- **[Vite+](https://vite.plus/)** (`vp`)
 
 ### Node.js Version Management
 
-This project uses Node.js 24 for development. We recommend using [mise](https://mise.jdx.dev/) for automatic version switching.
-
-**With mise:**
+This project pins Node.js in [`.node-version`](.node-version). Enable Vite+'s managed runtime once, then let `vp env` install and select that pinned version for you.
 
 ```bash
-# mise will automatically use Node.js 24 when you enter the project directory
-cd cdk-agc
-# Node.js 24 is automatically activated via .tool-versions
+# Install Vite+
+curl -fsSL https://vite.plus | bash
+
+# Use Vite+'s managed Node.js for this machine
+vp env on
+
+# Install the version pinned in .node-version
+vp env install
 ```
 
-**Without mise:**
-
-```bash
-# Manually install and use Node.js 24
-nvm install 24
-nvm use 24
-# or
-n 24
-```
+`pnpm` is pinned in [`package.json`](package.json) via `packageManager`, and Vite+ resolves that automatically when you run `vp install`.
 
 ### Setup Steps
 
@@ -38,17 +33,20 @@ n 24
 git clone https://github.com/go-to-k/cdk-agc.git
 cd cdk-agc
 
-# Install dependencies (workspace includes test-cdk)
-pnpm install
+# Install the pinned Node.js version from .node-version
+vp env install
 
-# Build
-pnpm run build
+# Install dependencies (workspace includes test-cdk)
+vp install
+
+# Package the CLI
+vp pack
 
 # Run unit tests
-pnpm test
+vp test
 
 # Run integration tests (requires Node.js 24)
-pnpm run test:integ
+vp run test:integ
 ```
 
 ## Development Workflow
@@ -65,20 +63,23 @@ git checkout -b fix/your-bug-fix
 
 ```bash
 # Development mode (auto-rebuild)
-pnpm run dev
+vp pack --watch
 ```
 
 ### 3. Code Quality Checks
 
 ```bash
-# Format code
-pnpm run format
+# Run the default verification flow
+vp check
 
-# Lint
-pnpm run lint
+# Format only
+vp fmt
+
+# Lint only
+vp lint
 
 # Format check (used in CI)
-pnpm run format:check
+vp fmt --check
 ```
 
 ### 4. Run Tests
@@ -87,38 +88,37 @@ pnpm run format:check
 
 ```bash
 # Run unit tests
-pnpm test
+vp test
 
 # Watch mode
-pnpm run test:watch
+vp test --watch
 
 # Generate coverage report
-pnpm run test:coverage
+vp test --coverage
 ```
 
 **Integration Tests:**
 
 ```bash
 # Run all integration tests (requires Node.js 24)
-pnpm run test:integ
+vp run test:integ
 
 # Run specific integration test
-pnpm run test:integ:basic       # Basic cleanup test
-pnpm run test:integ:multiple    # Multiple synth test
-pnpm run test:integ:keep-hours  # Keep hours option test
+vp run test:integ:basic       # Basic cleanup test
+vp run test:integ:multiple    # Multiple synth test
+vp run test:integ:keep-hours  # Keep hours option test
 ```
 
-**Note:** Integration tests use native TypeScript support in Node.js 24 (`node --enable-source-maps *.ts`). If you're using Node.js 20-22, use mise or switch to Node.js 24 manually.
+**Note:** Integration tests use Node.js 24's TypeScript execution support with `--experimental-strip-types`. If `vp env current` does not show the pinned Node.js version, run `vp env install` again before testing.
 
 ### 5. Verify Build
 
 ```bash
 # Production build
-pnpm run build
+vp pack
 
 # Test CLI execution
 node dist/cli.mjs --help
-node dist/cli.mjs -d
 ```
 
 ### 6. Commit
@@ -191,23 +191,22 @@ Format: `<type>(<scope>): <description>`
 Before creating a pull request, ensure:
 
 - [ ] PR title follows Conventional Commits format
-- [ ] Code is formatted (`pnpm run format`)
-- [ ] No lint errors (`pnpm run lint`)
-- [ ] All tests pass (`pnpm test`)
+- [ ] Code passes checks (`vp check`)
+- [ ] All tests pass (`vp test`)
 - [ ] New features include appropriate tests
 - [ ] Documentation is updated (if needed)
 
 ### Writing Tests
 
-Tests use [Vitest](https://vitest.dev/).
+Tests use [Vitest](https://vitest.dev/) through [Vite+](https://vite.plus/).
 
 New test files should follow the `*.test.ts` naming convention.
 
 ```typescript
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from "vite-plus/test";
 
-describe('Feature name', () => {
-  it('should work as expected', () => {
+describe("Feature name", () => {
+  it("should work as expected", () => {
     expect(result).toBe(expected);
   });
 });
@@ -269,8 +268,7 @@ npx semantic-release --no-ci
 **`.github/workflows/ci.yml`** - Runs on PRs and pushes:
 
 - Matrix build with Node.js 20, 22, 24
-- Lint check
-- Format check
+- Lint & format check
 - Build
 - Unit test execution
 - Integration test (Node.js 24 only)
@@ -292,24 +290,20 @@ npx semantic-release --no-ci
 
 - **TypeScript**: Type-safe development
 - **Node.js 24+**: Native TypeScript support for integration tests
-- **tsdown**: Fast build tool (rolldown-based)
+- **[Vite+](https://vite.plus/)**: Unified toolchain (build, test, lint, format)
 - **pnpm**: Fast, efficient package manager with workspace support
 
 ### Code Quality
 
-- **Vitest**: Fast unit test framework
-- **Oxlint**: Ultra-fast linter (Rust-based)
-- **Oxfmt**: Ultra-fast formatter (Rust-based)
+- **Vitest** (via Vite+): Fast unit test framework
+- **Oxlint** (via Vite+): Ultra-fast linter (Rust-based)
+- **Oxfmt** (via Vite+): Ultra-fast formatter (Rust-based)
 
 ### Build & Release
 
 - **Commander**: CLI framework
 - **semantic-release**: Automated version management and publishing
 - **GitHub Actions**: CI/CD automation
-
-### Development Tools
-
-- **mise**: Automatic Node.js version switching (optional but recommended)
 
 ## Questions & Support
 

@@ -10,6 +10,12 @@ const __dirname = path.dirname(__filename);
 const CDK_OUT = path.join(__dirname, '../cdk.out');
 const CLI = path.join(__dirname, '../../dist/cli.mjs');
 const APP_TS = path.join(__dirname, '../app.ts');
+const ROOT = path.join(__dirname, '../..');
+const VP = path.join(ROOT, 'node_modules/.bin/vp');
+
+function synth() {
+  execSync(`"${VP}" exec --filter test-cdk -- cdk synth`, { cwd: ROOT, stdio: 'inherit' });
+}
 
 console.log('\n=== Test 2: Multiple Synths (Old Assets) ===\n');
 
@@ -20,7 +26,7 @@ try {
 
 // Step 1: First synth
 console.log('1. First CDK synth...');
-execSync('pnpm synth', { cwd: path.join(__dirname, '..'), stdio: 'inherit' });
+synth();
 
 // Step 2: Modify stack
 console.log('\n2. Modifying stack...');
@@ -34,7 +40,7 @@ console.log('   ✓ Stack modified');
 
 // Step 3: Second synth
 console.log('\n3. Second CDK synth...');
-execSync('pnpm synth', { cwd: path.join(__dirname, '..'), stdio: 'inherit' });
+synth();
 
 // Step 4: Add some old assets manually (simulating old/unused assets)
 console.log('\n4. Simulating old assets...');

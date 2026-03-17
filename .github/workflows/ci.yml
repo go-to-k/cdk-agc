@@ -11,42 +11,34 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [20, 22, 24]
+        node-version: [20.19.2, 22.16.0, 24.14.0]
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 10
-
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - uses: voidzero-dev/setup-vp@v1
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'pnpm'
+          cache: true
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: vp install --frozen-lockfile
 
-      - name: Lint
-        run: pnpm run lint
+      - name: Check
+        run: vp check
 
-      - name: Format check
-        run: pnpm run format:check
-
-      - name: Build
-        run: pnpm run build
+      - name: Pack
+        run: vp pack
 
       - name: Test
-        run: pnpm run test
+        run: vp test --coverage
 
       - name: Integration Test
-        if: matrix.node-version == 24
-        run: pnpm --filter test-cdk test
+        if: startsWith(matrix.node-version, '24')
+        run: vp run test:integ
 
       - name: Upload coverage
-        if: matrix.node-version == 24
+        if: startsWith(matrix.node-version, '24')
         uses: codecov/codecov-action@v5
         with:
           files: ./coverage/coverage-final.json

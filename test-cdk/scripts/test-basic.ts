@@ -9,6 +9,12 @@ const __dirname = path.dirname(__filename);
 
 const CDK_OUT = path.join(__dirname, '../cdk.out');
 const CLI = path.join(__dirname, '../../dist/cli.mjs');
+const ROOT = path.join(__dirname, '../..');
+const VP = path.join(ROOT, 'node_modules/.bin/vp');
+
+function synth(stdio: 'inherit' | 'ignore' = 'inherit') {
+  execSync(`"${VP}" exec --filter test-cdk -- cdk synth`, { cwd: ROOT, stdio });
+}
 
 console.log('\n=== Test 1: Basic Cleanup ===\n');
 
@@ -19,7 +25,7 @@ try {
 
 // Step 1: CDK Synth
 console.log('1. Running CDK synth...');
-execSync('pnpm synth', { cwd: path.join(__dirname, '..'), stdio: 'inherit' });
+synth();
 
 // Step 2: Add dummy files
 console.log('\n2. Adding dummy asset and user files...');
@@ -44,7 +50,7 @@ const hasManifest = fs.existsSync(path.join(CDK_OUT, 'manifest.json'));
 const hasTemplate = fs.existsSync(path.join(CDK_OUT, 'TestStack.template.json'));
 
 // Verify asset files and directories are protected
-const assetsJsonFiles = fs.readdirSync(CDK_OUT).filter(f => f.endsWith('.assets.json'));
+const assetsJsonFiles = fs.readdirSync(CDK_OUT).filter((f) => f.endsWith('.assets.json'));
 let allAssetsProtected = true;
 let protectedAssetCount = 0;
 
@@ -75,7 +81,9 @@ for (const assetsFile of assetsJsonFiles) {
       if (entry.source?.directory) {
         const assetPath = path.join(CDK_OUT, entry.source.directory);
         if (!fs.existsSync(assetPath)) {
-          console.error(`   ✗ Docker asset ${entry.source.directory} (used in ${stackName}) was deleted`);
+          console.error(
+            `   ✗ Docker asset ${entry.source.directory} (used in ${stackName}) was deleted`,
+          );
           allAssetsProtected = false;
         } else {
           protectedAssetCount++;
@@ -103,5 +111,5 @@ if (!hasUnusedAsset && hasUserFile && hasManifest && hasTemplate && allAssetsPro
 
 // Step 6: Re-synth to verify CDK still works
 console.log('\n6. Re-running CDK synth to verify...');
-execSync('pnpm synth > /dev/null 2>&1', { cwd: path.join(__dirname, '..') });
+synth('ignore');
 console.log('   ✓ CDK synth still works after cleanup\n');

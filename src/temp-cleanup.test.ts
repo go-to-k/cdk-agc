@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { promises as fs } from "fs";
-import path from "path";
-import os from "os";
+import { describe, it, expect, beforeEach, afterEach } from "vite-plus/test";
+import { promises as fs } from "node:fs";
+import path from "node:path";
+import os from "node:os";
 import { cleanupTempDirectories } from "./temp-cleanup.js";
 
 describe("cleanupTempDirectories", () => {

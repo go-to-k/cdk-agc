@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { promises as fs } from "fs";
-import path from "path";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vite-plus/test";
+import { promises as fs } from "node:fs";
+import path from "node:path";
 import { cleanupAssets } from "./asset-cleanup.js";
 import * as dockerCleanup from "./docker-cleanup.js";
 

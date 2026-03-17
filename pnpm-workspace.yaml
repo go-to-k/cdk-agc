@@ -2,5 +2,9 @@ packages:
   - .
   - test-cdk
 
+overrides:
+  vite: npm:@voidzero-dev/vite-plus-core@^0.1.11
+  vitest: npm:@voidzero-dev/vite-plus-test@^0.1.11
+
 onlyBuiltDependencies:
   - esbuild

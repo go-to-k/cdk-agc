@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { promises as fs } from "fs";
-import path from "path";
+import { describe, it, expect, beforeEach, afterEach } from "vite-plus/test";
+import { promises as fs } from "node:fs";
+import path from "node:path";
 import { formatSize, calculateSize } from "./utils.js";
 
 const TEST_DIR = path.join(process.cwd(), "test-utils");

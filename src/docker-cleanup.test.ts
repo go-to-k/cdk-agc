@@ -1,14 +1,14 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vite-plus/test";
 import {
   collectDockerImageAssetPaths,
   deleteDockerImages,
   extractDockerImageHash,
   parseDockerSize,
 } from "./docker-cleanup.js";
-import { execSync } from "child_process";
-import { promises as fs } from "fs";
-import path from "path";
-import os from "os";
+import { execSync } from "node:child_process";
+import { promises as fs } from "node:fs";
+import path from "node:path";
+import os from "node:os";
 
 vi.mock("child_process", () => ({
   execSync: vi.fn(),

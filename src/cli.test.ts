@@ -1,7 +1,7 @@
-import { describe, it, expect } from "vitest";
-import { exec } from "child_process";
-import { promisify } from "util";
-import path from "path";
+import { describe, it, expect } from "vite-plus/test";
+import { exec } from "node:child_process";
+import { promisify } from "node:util";
+import path from "node:path";
 
 const execAsync = promisify(exec);
 const CLI_PATH = path.join(process.cwd(), "dist", "cli.mjs");

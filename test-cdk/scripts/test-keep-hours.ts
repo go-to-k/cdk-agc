@@ -9,6 +9,12 @@ const __dirname = path.dirname(__filename);
 
 const CDK_OUT = path.join(__dirname, '../cdk.out');
 const CLI = path.join(__dirname, '../../dist/cli.mjs');
+const ROOT = path.join(__dirname, '../..');
+const VP = path.join(ROOT, 'node_modules/.bin/vp');
+
+function synth() {
+  execSync(`"${VP}" exec --filter test-cdk -- cdk synth`, { cwd: ROOT, stdio: 'inherit' });
+}
 
 console.log('\n=== Test 3: Keep Hours Option ===\n');
 
@@ -19,7 +25,7 @@ try {
 
 // Step 1: CDK Synth
 console.log('1. Running CDK synth...');
-execSync('pnpm synth', { cwd: path.join(__dirname, '..'), stdio: 'inherit' });
+synth();
 
 // Step 2: Add recent asset (simulating recently created but unused asset)
 console.log('\n2. Adding recent asset...');

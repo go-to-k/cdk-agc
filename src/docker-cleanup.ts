@@ -1,6 +1,6 @@
-import { execSync } from "child_process";
-import { promises as fs } from "fs";
-import path from "path";
+import { execSync } from "node:child_process";
+import { promises as fs } from "node:fs";
+import path from "node:path";
 import { formatSize } from "./utils.js";
 
 /**
@@ -48,7 +48,7 @@ export async function collectDockerImageAssetPaths(
  */
 export function extractDockerImageHash(assetPath: string): string | null {
   const match = assetPath.match(/asset\.(.+)/);
-  return match ? match[1] : null;
+  return match?.[1] ?? null;
 }
 
 /**
@@ -109,7 +109,7 @@ export async function deleteDockerImages(hashes: string[], dryRun: boolean): Pro
 function imageExistsInOutput(hash: string, allImagesOutput: string): boolean {
   for (const line of allImagesOutput.split("\n")) {
     if (!line) continue;
-    const [tag] = line.split("\t");
+    const [tag = ""] = line.split("\t");
 
     // Check for local format or ECR format
     if (tag === `cdkasset-${hash}:latest`) {
@@ -137,8 +137,8 @@ async function deleteDockerImageFromOutput(
     .split("\n")
     .filter((line) => line.trim())
     .map((line) => {
-      const [tag, id, size] = line.split("\t");
-      return { tag, id, size };
+      const [tag = "", , size = "0 B"] = line.split("\t");
+      return { tag, size };
     })
     .filter(
       ({ tag }) =>
@@ -151,8 +151,7 @@ async function deleteDockerImageFromOutput(
   }
 
   const allTags = matchingLines.map(({ tag }) => tag);
-  // Use the size from the first matching image (all tags point to the same image)
-  const imageSize = parseDockerSize(matchingLines[0].size);
+  const imageSize = parseDockerSize(matchingLines[0]?.size ?? "0 B");
 
   console.log(
     `Found Docker image with ${allTags.length} tag(s) [asset.${hash.substring(0, 8)}...] (${formatSize(imageSize)}):`,
@@ -185,8 +184,8 @@ export function parseDockerSize(sizeStr: string): number {
   const match = sizeStr.match(/^([\d.]+)\s*([KMGT]?B)$/i);
   if (!match) return 0;
 
-  const value = parseFloat(match[1]);
-  const unit = match[2].toUpperCase();
+  const value = parseFloat(match[1] ?? "0");
+  const unit = (match[2] ?? "B").toUpperCase();
 
   const multipliers: Record<string, number> = {
     B: 1,
@@ -196,5 +195,5 @@ export function parseDockerSize(sizeStr: string): number {
     TB: 1024 * 1024 * 1024 * 1024,
   };
 
-  return Math.round(value * (multipliers[unit] || 1));
+  return Math.round(value * (multipliers[unit] ?? 1));
 }

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { Command } from "commander";
-import { createRequire } from "module";
+import { createRequire } from "node:module";
 import { cleanupAssets } from "./asset-cleanup.js";
 import { cleanupTempDirectories } from "./temp-cleanup.js";
 

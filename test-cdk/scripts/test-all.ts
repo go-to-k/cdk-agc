@@ -24,12 +24,15 @@ for (const test of tests) {
   try {
     console.log(`\n🧪 Running: ${test.name}`);
     console.log('─'.repeat(60));
-    execSync(`node --enable-source-maps ${path.join(scriptsDir, test.script)}`, {
-      stdio: 'inherit',
-    });
+    execSync(
+      `node --enable-source-maps --experimental-strip-types ${path.join(scriptsDir, test.script)}`,
+      {
+        stdio: 'inherit',
+      },
+    );
     passed++;
     console.log(`\n✅ ${test.name} - PASSED\n`);
-  } catch (error) {
+  } catch {
     failed++;
     console.error(`\n❌ ${test.name} - FAILED\n`);
   }
