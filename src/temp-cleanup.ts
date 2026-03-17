@@ -1,6 +1,6 @@
 import { promises as fs } from "node:fs";
-import path from "node:path";
 import os from "node:os";
+import path from "node:path";
 import { calculateSize, formatSize } from "./utils.js";
 
 export interface TempCleanupOptions {
