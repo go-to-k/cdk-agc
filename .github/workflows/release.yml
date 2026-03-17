@@ -35,7 +35,7 @@ jobs:
       - name: Install dependencies
         run: vp install --frozen-lockfile
 
-      - name: Build
+      - name: Pack
         run: vp pack
 
       - name: Release
