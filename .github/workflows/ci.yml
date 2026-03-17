@@ -21,8 +21,11 @@ jobs:
       - name: Install dependencies
         run: vp install --frozen-lockfile
 
-      - name: Check
-        run: vp check
+      - name: Format check
+        run: vp fmt --check --ignore-path .fmtignore
+
+      - name: Lint
+        run: vp lint
 
       - name: Pack
         run: vp pack
