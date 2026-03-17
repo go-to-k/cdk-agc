@@ -2,7 +2,27 @@
   "name": "cdk-agc",
   "version": "1.13.1",
   "description": "CDK Assembly Garbage Collector - Clean up unused assets in cdk.out",
-  "type": "module",
+  "keywords": [
+    "assembly",
+    "assets",
+    "aws-cdk",
+    "cdk",
+    "cleanup",
+    "cli",
+    "cloud-assembly",
+    "garbage-collector",
+    "storage-optimization"
+  ],
+  "homepage": "https://github.com/go-to-k/cdk-agc#readme",
+  "bugs": {
+    "url": "https://github.com/go-to-k/cdk-agc/issues"
+  },
+  "license": "Apache-2.0",
+  "author": "go-to-k",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/go-to-k/cdk-agc.git"
+  },
   "bin": {
     "cdk-agc": "dist/cli.mjs"
   },
@@ -11,30 +31,10 @@
     "README.md",
     "LICENSE"
   ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/go-to-k/cdk-agc.git"
-  },
-  "bugs": {
-    "url": "https://github.com/go-to-k/cdk-agc/issues"
-  },
-  "homepage": "https://github.com/go-to-k/cdk-agc#readme",
+  "type": "module",
   "scripts": {
     "prepublishOnly": "vp pack"
   },
-  "keywords": [
-    "aws-cdk",
-    "cdk",
-    "garbage-collector",
-    "cleanup",
-    "assets",
-    "assembly",
-    "cloud-assembly",
-    "storage-optimization",
-    "cli"
-  ],
-  "author": "go-to-k",
-  "license": "Apache-2.0",
   "dependencies": {
     "commander": "^12.1.0"
   },

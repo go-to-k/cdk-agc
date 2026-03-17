@@ -2,6 +2,7 @@
   "name": "test-cdk",
   "version": "1.0.0",
   "description": "Test CDK project for cdk-agc",
+  "license": "Apache-2.0",
   "type": "module",
   "scripts": {
     "synth": "cdk synth",
@@ -10,7 +11,6 @@
     "test:multiple": "node --enable-source-maps scripts/test-multiple.ts",
     "test:keep-hours": "node --enable-source-maps scripts/test-keep-hours.ts"
   },
-  "license": "Apache-2.0",
   "dependencies": {
     "aws-cdk-lib": "^2.237.1",
     "constructs": "^10.4.5"

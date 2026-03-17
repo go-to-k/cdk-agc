@@ -1,130 +1,111 @@
 ## [1.13.1](https://github.com/go-to-k/cdk-agc/compare/v1.13.0...v1.13.1) (2026-02-23)
 
-
 ### Bug Fixes
 
-* fail if including symlinks ([#41](https://github.com/go-to-k/cdk-agc/issues/41)) ([25b2b1c](https://github.com/go-to-k/cdk-agc/commit/25b2b1cd4c097fba54cd8c9ee12f867fef4caa1d))
+- fail if including symlinks ([#41](https://github.com/go-to-k/cdk-agc/issues/41)) ([25b2b1c](https://github.com/go-to-k/cdk-agc/commit/25b2b1cd4c097fba54cd8c9ee12f867fef4caa1d))
 
 # [1.13.0](https://github.com/go-to-k/cdk-agc/compare/v1.12.0...v1.13.0) (2026-02-19)
 
-
 ### Features
 
-* support `CDK_DOCKER` environment variable for container runtime alternatives ([#39](https://github.com/go-to-k/cdk-agc/issues/39)) ([903beb0](https://github.com/go-to-k/cdk-agc/commit/903beb0812d3ee7548c60321ed26ce50e622bd8b))
+- support `CDK_DOCKER` environment variable for container runtime alternatives ([#39](https://github.com/go-to-k/cdk-agc/issues/39)) ([903beb0](https://github.com/go-to-k/cdk-agc/commit/903beb0812d3ee7548c60321ed26ce50e622bd8b))
 
 # [1.12.0](https://github.com/go-to-k/cdk-agc/compare/v1.11.0...v1.12.0) (2026-02-14)
 
-
 ### Features
 
-* improve message lines ([#35](https://github.com/go-to-k/cdk-agc/issues/35)) ([09f5d77](https://github.com/go-to-k/cdk-agc/commit/09f5d77eeb40363a51f7eb6284b6797624e38c60))
+- improve message lines ([#35](https://github.com/go-to-k/cdk-agc/issues/35)) ([09f5d77](https://github.com/go-to-k/cdk-agc/commit/09f5d77eeb40363a51f7eb6284b6797624e38c60))
 
 # [1.11.0](https://github.com/go-to-k/cdk-agc/compare/v1.10.0...v1.11.0) (2026-02-14)
 
-
 ### Features
 
-* use modern Docker CLI syntax (image ls/rm) ([#34](https://github.com/go-to-k/cdk-agc/issues/34)) ([ebc1288](https://github.com/go-to-k/cdk-agc/commit/ebc1288f1199cb0b6992894f8e2b69571e736329))
+- use modern Docker CLI syntax (image ls/rm) ([#34](https://github.com/go-to-k/cdk-agc/issues/34)) ([ebc1288](https://github.com/go-to-k/cdk-agc/commit/ebc1288f1199cb0b6992894f8e2b69571e736329))
 
 # [1.10.0](https://github.com/go-to-k/cdk-agc/compare/v1.9.0...v1.10.0) (2026-02-13)
 
-
 ### Features
 
-* modify message format ([#33](https://github.com/go-to-k/cdk-agc/issues/33)) ([30c6651](https://github.com/go-to-k/cdk-agc/commit/30c6651387f8704d85e83fc4b5ca1c9f3b01cc06))
+- modify message format ([#33](https://github.com/go-to-k/cdk-agc/issues/33)) ([30c6651](https://github.com/go-to-k/cdk-agc/commit/30c6651387f8704d85e83fc4b5ca1c9f3b01cc06))
 
 # [1.9.0](https://github.com/go-to-k/cdk-agc/compare/v1.8.0...v1.9.0) (2026-02-13)
 
-
 ### Features
 
-* improve assets size message ([#32](https://github.com/go-to-k/cdk-agc/issues/32)) ([6e656a8](https://github.com/go-to-k/cdk-agc/commit/6e656a889114be89af68acd2c714d7f23fa43bcb))
+- improve assets size message ([#32](https://github.com/go-to-k/cdk-agc/issues/32)) ([6e656a8](https://github.com/go-to-k/cdk-agc/commit/6e656a889114be89af68acd2c714d7f23fa43bcb))
 
 # [1.8.0](https://github.com/go-to-k/cdk-agc/compare/v1.7.0...v1.8.0) (2026-02-13)
 
-
 ### Features
 
-* improve message format ([#31](https://github.com/go-to-k/cdk-agc/issues/31)) ([75fff72](https://github.com/go-to-k/cdk-agc/commit/75fff727bbeedc308c386300b07d494a4bb76cf2))
+- improve message format ([#31](https://github.com/go-to-k/cdk-agc/issues/31)) ([75fff72](https://github.com/go-to-k/cdk-agc/commit/75fff727bbeedc308c386300b07d494a4bb76cf2))
 
 # [1.7.0](https://github.com/go-to-k/cdk-agc/compare/v1.6.0...v1.7.0) (2026-02-13)
 
-
 ### Features
 
-* add total size summary for assets and Docker images ([#30](https://github.com/go-to-k/cdk-agc/issues/30)) ([b8aa9e1](https://github.com/go-to-k/cdk-agc/commit/b8aa9e1210d6d1cf291dc7612bd9a4e10fd882d4))
+- add total size summary for assets and Docker images ([#30](https://github.com/go-to-k/cdk-agc/issues/30)) ([b8aa9e1](https://github.com/go-to-k/cdk-agc/commit/b8aa9e1210d6d1cf291dc7612bd9a4e10fd882d4))
 
 # [1.6.0](https://github.com/go-to-k/cdk-agc/compare/v1.5.0...v1.6.0) (2026-02-13)
 
-
 ### Features
 
-* add size display for Docker images with total size summary ([#29](https://github.com/go-to-k/cdk-agc/issues/29)) ([eb16e98](https://github.com/go-to-k/cdk-agc/commit/eb16e982b2aa1211e7173e0cbe8ce6571f420a06))
+- add size display for Docker images with total size summary ([#29](https://github.com/go-to-k/cdk-agc/issues/29)) ([eb16e98](https://github.com/go-to-k/cdk-agc/commit/eb16e982b2aa1211e7173e0cbe8ce6571f420a06))
 
 # [1.5.0](https://github.com/go-to-k/cdk-agc/compare/v1.4.1...v1.5.0) (2026-02-13)
 
-
 ### Features
 
-* modify messages for docker deletion ([#28](https://github.com/go-to-k/cdk-agc/issues/28)) ([2cb2482](https://github.com/go-to-k/cdk-agc/commit/2cb24822fea50ef12675da397f1e656a4ed05ba6))
+- modify messages for docker deletion ([#28](https://github.com/go-to-k/cdk-agc/issues/28)) ([2cb2482](https://github.com/go-to-k/cdk-agc/commit/2cb24822fea50ef12675da397f1e656a4ed05ba6))
 
 ## [1.4.1](https://github.com/go-to-k/cdk-agc/compare/v1.4.0...v1.4.1) (2026-02-12)
 
-
 ### Bug Fixes
 
-* infinite loops occur when sub-directories include cdk.out ([#27](https://github.com/go-to-k/cdk-agc/issues/27)) ([47340d6](https://github.com/go-to-k/cdk-agc/commit/47340d639d71da208a5ecddba8b240038de087e7))
+- infinite loops occur when sub-directories include cdk.out ([#27](https://github.com/go-to-k/cdk-agc/issues/27)) ([47340d6](https://github.com/go-to-k/cdk-agc/commit/47340d639d71da208a5ecddba8b240038de087e7))
 
 # [1.4.0](https://github.com/go-to-k/cdk-agc/compare/v1.3.0...v1.4.0) (2026-02-12)
 
-
 ### Features
 
-* support docker image deletion ([#26](https://github.com/go-to-k/cdk-agc/issues/26)) ([5b6cc7f](https://github.com/go-to-k/cdk-agc/commit/5b6cc7fd428d9a3c0b516dd4565fbace27ef2fdf))
+- support docker image deletion ([#26](https://github.com/go-to-k/cdk-agc/issues/26)) ([5b6cc7f](https://github.com/go-to-k/cdk-agc/commit/5b6cc7fd428d9a3c0b516dd4565fbace27ef2fdf))
 
 # [1.3.0](https://github.com/go-to-k/cdk-agc/compare/v1.2.0...v1.3.0) (2026-02-11)
 
-
 ### Features
 
-* improve output messages with full paths and simpler wording ([#24](https://github.com/go-to-k/cdk-agc/issues/24)) ([3de1310](https://github.com/go-to-k/cdk-agc/commit/3de1310c99ce6e01bd11c8f44ba1331aedf1105a))
+- improve output messages with full paths and simpler wording ([#24](https://github.com/go-to-k/cdk-agc/issues/24)) ([3de1310](https://github.com/go-to-k/cdk-agc/commit/3de1310c99ce6e01bd11c8f44ba1331aedf1105a))
 
 # [1.2.0](https://github.com/go-to-k/cdk-agc/compare/v1.1.0...v1.2.0) (2026-02-10)
 
-
 ### Features
 
-* modify logic to search assets ([#19](https://github.com/go-to-k/cdk-agc/issues/19)) ([b123744](https://github.com/go-to-k/cdk-agc/commit/b12374418896b91dfc13411af858f91f5020d89b))
+- modify logic to search assets ([#19](https://github.com/go-to-k/cdk-agc/issues/19)) ([b123744](https://github.com/go-to-k/cdk-agc/commit/b12374418896b91dfc13411af858f91f5020d89b))
 
 # [1.1.0](https://github.com/go-to-k/cdk-agc/compare/v1.0.2...v1.1.0) (2026-02-10)
 
-
 ### Features
 
-* add `--cleanup-tmp` option to clean temporary CDK directories ([#13](https://github.com/go-to-k/cdk-agc/issues/13)) ([d2f6234](https://github.com/go-to-k/cdk-agc/commit/d2f62341628466379de2b8da6dcd43be8e79e51c))
+- add `--cleanup-tmp` option to clean temporary CDK directories ([#13](https://github.com/go-to-k/cdk-agc/issues/13)) ([d2f6234](https://github.com/go-to-k/cdk-agc/commit/d2f62341628466379de2b8da6dcd43be8e79e51c))
 
 ## [1.0.2](https://github.com/go-to-k/cdk-agc/compare/v1.0.1...v1.0.2) (2026-02-09)
 
-
 ### Bug Fixes
 
-* cannot protect assets for Stage ([#4](https://github.com/go-to-k/cdk-agc/issues/4)) ([72646be](https://github.com/go-to-k/cdk-agc/commit/72646bed9cc68d2436df7f6de33ea2fc6cbdb127))
+- cannot protect assets for Stage ([#4](https://github.com/go-to-k/cdk-agc/issues/4)) ([72646be](https://github.com/go-to-k/cdk-agc/commit/72646bed9cc68d2436df7f6de33ea2fc6cbdb127))
 
 ## [1.0.1](https://github.com/go-to-k/cdk-agc/compare/v1.0.0...v1.0.1) (2026-02-09)
 
-
 ### Bug Fixes
 
-* cli version ([#3](https://github.com/go-to-k/cdk-agc/issues/3)) ([10fa1d5](https://github.com/go-to-k/cdk-agc/commit/10fa1d543805336265a3ebadde5d2d3d350f4f58))
+- cli version ([#3](https://github.com/go-to-k/cdk-agc/issues/3)) ([10fa1d5](https://github.com/go-to-k/cdk-agc/commit/10fa1d543805336265a3ebadde5d2d3d350f4f58))
 
 # 1.0.0 (2026-02-09)
 
-
 ### Bug Fixes
 
-* repository url ([#2](https://github.com/go-to-k/cdk-agc/issues/2)) ([780db2a](https://github.com/go-to-k/cdk-agc/commit/780db2a41acc61e0de437ac06387334137ee57a0))
-
+- repository url ([#2](https://github.com/go-to-k/cdk-agc/issues/2)) ([780db2a](https://github.com/go-to-k/cdk-agc/commit/780db2a41acc61e0de437ac06387334137ee57a0))
 
 ### Features
 
-* first commit ([fd94831](https://github.com/go-to-k/cdk-agc/commit/fd948318add9e3dee0e389ae4309cbd8818a6a54))
+- first commit ([fd94831](https://github.com/go-to-k/cdk-agc/commit/fd948318add9e3dee0e389ae4309cbd8818a6a54))

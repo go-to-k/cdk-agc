@@ -41,23 +41,19 @@ export default defineConfig({
   run: {
     tasks: {
       "test:integ": {
-        command:
-          "vp pack && pnpm --filter test-cdk test",
+        command: "vp pack && pnpm --filter test-cdk test",
         cache: false,
       },
       "test:integ:basic": {
-        command:
-          "vp pack && pnpm --filter test-cdk test:basic",
+        command: "vp pack && pnpm --filter test-cdk test:basic",
         cache: false,
       },
       "test:integ:multiple": {
-        command:
-          "vp pack && pnpm --filter test-cdk test:multiple",
+        command: "vp pack && pnpm --filter test-cdk test:multiple",
         cache: false,
       },
       "test:integ:keep-hours": {
-        command:
-          "vp pack && pnpm --filter test-cdk test:keep-hours",
+        command: "vp pack && pnpm --filter test-cdk test:keep-hours",
         cache: false,
       },
     },
