@@ -41,11 +41,12 @@ export default defineConfig({
     sourcemap: true,
     shims: true,
   },
-  staged: {
-    "*": "vp check --fix",
-  },
   run: {
     tasks: {
+      cli: {
+        command: "node dist/cli.mjs",
+        cache: false,
+      },
       "test:integ": {
         command:
           "vp pack && vp exec --filter test-cdk -- node --enable-source-maps scripts/test-all.ts",
@@ -66,10 +67,9 @@ export default defineConfig({
           "vp pack && vp exec --filter test-cdk -- node --enable-source-maps scripts/test-keep-hours.ts",
         cache: false,
       },
-      cli: {
-        command: "node dist/cli.mjs",
-        cache: false,
-      },
     },
+  },
+  staged: {
+    "*": "vp check --fix",
   },
 });
