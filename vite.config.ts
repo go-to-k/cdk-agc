@@ -70,6 +70,6 @@ export default defineConfig({
     },
   },
   staged: {
-    "*": "vp check --fix",
+    "*": "vp fmt --fix --ignore-path .fmtignore && vp lint --fix",
   },
 });
