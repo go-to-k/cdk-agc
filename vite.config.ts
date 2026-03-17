@@ -45,19 +45,23 @@ export default defineConfig({
   run: {
     tasks: {
       "test:integ": {
-        command: "vp pack && pnpm --filter test-cdk test",
+        command:
+          "vp pack && vp exec --filter test-cdk -- node --enable-source-maps scripts/test-all.ts",
         cache: false,
       },
       "test:integ:basic": {
-        command: "vp pack && pnpm --filter test-cdk test:basic",
+        command:
+          "vp pack && vp exec --filter test-cdk -- node --enable-source-maps scripts/test-basic.ts",
         cache: false,
       },
       "test:integ:multiple": {
-        command: "vp pack && pnpm --filter test-cdk test:multiple",
+        command:
+          "vp pack && vp exec --filter test-cdk -- node --enable-source-maps scripts/test-multiple.ts",
         cache: false,
       },
       "test:integ:keep-hours": {
-        command: "vp pack && pnpm --filter test-cdk test:keep-hours",
+        command:
+          "vp pack && vp exec --filter test-cdk -- node --enable-source-maps scripts/test-keep-hours.ts",
         cache: false,
       },
       cli: {
