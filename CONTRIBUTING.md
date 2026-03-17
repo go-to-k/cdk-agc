@@ -118,7 +118,7 @@ vp run test:integ:keep-hours  # Keep hours option test
 vp pack
 
 # Test CLI execution
-node dist/cli.mjs --help
+vp run cli
 ```
 
 ### 6. Commit
