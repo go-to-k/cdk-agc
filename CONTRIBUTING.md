@@ -258,7 +258,7 @@ If GitHub Actions fails:
 
 ```bash
 # Run semantic-release locally
-npx semantic-release --no-ci
+vp exec semantic-release --no-ci
 ```
 
 ## CI/CD
@@ -267,12 +267,8 @@ npx semantic-release --no-ci
 
 **`.github/workflows/ci.yml`** - Runs on PRs and pushes:
 
-- Matrix build with Node.js 20, 22, 24
-- Lint & format check
-- Build
-- Unit test execution
-- Integration test (Node.js 24 only)
-- Coverage upload (Node.js 24 only)
+- Test job (Node.js 24): lint & format check, build, unit tests, integration tests, coverage upload
+- Compat job (Node.js 20, 22): verify built CLI runs correctly
 
 ### Release (Automated Publishing)
 

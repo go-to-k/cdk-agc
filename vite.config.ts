@@ -36,7 +36,11 @@ export default defineConfig({
     target: "node20",
     dts: true,
     clean: true,
+    sourcemap: true,
     shims: true,
+  },
+  staged: {
+    "*": "vp check --fix",
   },
   run: {
     tasks: {
@@ -54,6 +58,10 @@ export default defineConfig({
       },
       "test:integ:keep-hours": {
         command: "vp pack && pnpm --filter test-cdk test:keep-hours",
+        cache: false,
+      },
+      cli: {
+        command: "node dist/cli.mjs",
         cache: false,
       },
     },
