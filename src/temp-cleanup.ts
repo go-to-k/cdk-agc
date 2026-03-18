@@ -6,13 +6,14 @@ import { calculateSize, formatSize } from "./utils.js";
 export interface TempCleanupOptions {
   dryRun: boolean;
   keepHours: number;
+  verbose?: boolean;
 }
 
 /**
  * Clean up all temporary CDK output directories
  */
 export async function cleanupTempDirectories(options: TempCleanupOptions): Promise<void> {
-  const { dryRun, keepHours } = options;
+  const { dryRun, keepHours, verbose } = options;
   const tmpdir = os.tmpdir();
 
   console.log(`Scanning ${tmpdir}`);
@@ -25,28 +26,76 @@ export async function cleanupTempDirectories(options: TempCleanupOptions): Promi
     return;
   }
 
+  if (verbose) {
+    console.log(`Found ${directories.length} temporary CDK directory(ies)\n`);
+  }
+
   let totalCleaned = 0;
   let totalSize = 0;
+  const protectedDirs: Array<{ path: string; reason: string }> = [];
+  const dirsToDelete: Array<{ path: string; size: number }> = [];
 
   for (const dir of directories) {
     try {
       // Check if directory should be protected by age
-      if (await shouldProtectDirectory(dir, keepHours)) {
+      const protectionReason = await getProtectionReason(dir, keepHours);
+      if (protectionReason) {
+        if (verbose) {
+          protectedDirs.push({ path: dir, reason: protectionReason });
+        }
         continue;
       }
 
       // Calculate size before deletion
       const size = await calculateSize(dir);
       totalSize += size;
-
-      if (!dryRun) {
-        await fs.rm(dir, { recursive: true, force: true });
-      }
+      dirsToDelete.push({ path: dir, size });
 
       totalCleaned++;
-    } catch {
-      // Silently continue on error
+    } catch (error) {
+      if (verbose) {
+        console.warn(
+          `Warning: Failed to process ${dir}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
       continue;
+    }
+  }
+
+  if (verbose && protectedDirs.length > 0) {
+    console.log("Protected directories:");
+    for (const item of protectedDirs) {
+      console.log(`  ⊘ ${path.basename(item.path)} - ${item.reason}`);
+    }
+    console.log("");
+  }
+
+  if (verbose && dirsToDelete.length > 0) {
+    console.log("Directories to delete:");
+    for (const item of dirsToDelete) {
+      console.log(`  ✓ ${path.basename(item.path)} (${formatSize(item.size)})`);
+    }
+    console.log("");
+  }
+
+  if (!dryRun && dirsToDelete.length > 0) {
+    if (verbose) {
+      console.log("Deleting directories:");
+    }
+    for (const item of dirsToDelete) {
+      try {
+        if (verbose) {
+          console.log(`  → Deleting ${path.basename(item.path)}...`);
+        }
+        await fs.rm(item.path, { recursive: true, force: true });
+      } catch (error) {
+        console.warn(
+          `Warning: Failed to delete ${item.path}: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
+    if (verbose) {
+      console.log("");
     }
   }
 
@@ -90,18 +139,23 @@ async function findTempDirectories(): Promise<string[]> {
 }
 
 /**
- * Check if directory should be protected based on age
+ * Get the reason why a directory should be protected from deletion
+ * Returns null if not protected
  */
-async function shouldProtectDirectory(dirPath: string, keepHours: number): Promise<boolean> {
+async function getProtectionReason(dirPath: string, keepHours: number): Promise<string | null> {
   if (keepHours <= 0) {
-    return false;
+    return null;
   }
 
   try {
     const stats = await fs.stat(dirPath);
     const ageHours = (Date.now() - stats.mtimeMs) / (1000 * 60 * 60);
-    return ageHours <= keepHours;
+    if (ageHours <= keepHours) {
+      return `modified within last ${keepHours} hour(s)`;
+    }
   } catch {
-    return false;
+    return null;
   }
+
+  return null;
 }

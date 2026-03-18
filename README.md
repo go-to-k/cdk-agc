@@ -62,6 +62,9 @@ npx cdk-agc
 # Dry-run: Preview what would be deleted
 npx cdk-agc -d
 
+# Verbose: Show detailed operation information
+npx cdk-agc -v
+
 # Custom directory (useful for monorepos)
 npx cdk-agc -o ./packages/infra/cdk.out
 
@@ -78,6 +81,7 @@ npx cdk-agc -t
 | --------------------------- | --------------------------------------------------- | --------- |
 | `-o, --outdir <path>`       | CDK output directory to clean                       | `cdk.out` |
 | `-d, --dry-run`             | Show what would be deleted without deleting         | `false`   |
+| `-v, --verbose`             | Show detailed operation information                 | `false`   |
 | `-k, --keep-hours <number>` | Protect files modified within N hours               | `0`       |
 | `-t, --cleanup-tmp`         | Clean up all temporary CDK directories in `$TMPDIR` | `false`   |
 | `-h, --help`                | Display help                                        |           |

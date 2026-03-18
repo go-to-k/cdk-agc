@@ -56,13 +56,23 @@ export function extractDockerImageHash(assetPath: string): string | null {
  * Only prints header if at least one image is found
  * Returns the total size of Docker images in bytes
  */
-export async function deleteDockerImages(hashes: string[], dryRun: boolean): Promise<number> {
+export async function deleteDockerImages(
+  hashes: string[],
+  dryRun: boolean,
+  verbose = false,
+): Promise<number> {
   if (hashes.length === 0) {
     return 0;
   }
 
   // Get all Docker images once with size information
   const dockerCommand = getDockerCommand();
+
+  if (verbose) {
+    console.log("Searching for Docker images...");
+    console.log(`Using Docker command: ${dockerCommand}\n`);
+  }
+
   let allImagesOutput: string;
   try {
     allImagesOutput = execSync(
@@ -83,14 +93,21 @@ export async function deleteDockerImages(hashes: string[], dryRun: boolean): Pro
   const existingHashes = hashes.filter((hash) => imageExistsInOutput(hash, allImagesOutput));
 
   if (existingHashes.length === 0) {
+    if (verbose) {
+      console.log("No Docker images found matching deleted assets.\n");
+    }
     return 0;
+  }
+
+  if (verbose) {
+    console.log(`Found ${existingHashes.length} Docker image(s) to remove\n`);
   }
 
   console.log("");
 
   let totalDockerSize = 0;
   for (const hash of existingHashes) {
-    const size = await deleteDockerImageFromOutput(hash, allImagesOutput, dryRun);
+    const size = await deleteDockerImageFromOutput(hash, allImagesOutput, dryRun, verbose);
     totalDockerSize += size;
   }
 
@@ -131,6 +148,7 @@ async function deleteDockerImageFromOutput(
   hash: string,
   allImagesOutput: string,
   dryRun: boolean,
+  verbose = false,
 ): Promise<number> {
   // Search all images for all tags with this hash and extract size
   const matchingLines = allImagesOutput
@@ -162,15 +180,24 @@ async function deleteDockerImageFromOutput(
   console.log("");
 
   if (!dryRun) {
+    if (verbose) {
+      console.log("  Removing Docker image(s):");
+    }
     const dockerCommand = getDockerCommand();
     for (const tag of allTags) {
       try {
+        if (verbose) {
+          console.log(`    → ${dockerCommand} image rm ${tag}`);
+        }
         execSync(`${dockerCommand} image rm ${tag}`, { stdio: "pipe" });
       } catch (error) {
         console.warn(
           `    Warning: Failed to delete Docker image ${tag}: ${error instanceof Error ? error.message : String(error)}`,
         );
       }
+    }
+    if (verbose) {
+      console.log("");
     }
   }
 

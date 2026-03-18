@@ -17,6 +17,7 @@ program
   .option("-d, --dry-run", "Show what would be deleted without actually deleting", false)
   .option("-k, --keep-hours <number>", "Protect files modified within this many hours", "0")
   .option("-t, --cleanup-tmp", "Clean up all temporary cdk.out directories in $TMPDIR", false)
+  .option("-v, --verbose", "Show detailed operation information", false)
   .action(async (options) => {
     try {
       const keepHours = parseInt(options.keepHours, 10);
@@ -35,12 +36,14 @@ program
         await cleanupTempDirectories({
           dryRun: options.dryRun,
           keepHours,
+          verbose: options.verbose,
         });
       } else {
         await cleanupAssets({
           outdir: options.outdir,
           dryRun: options.dryRun,
           keepHours,
+          verbose: options.verbose,
         });
       }
     } catch (error) {

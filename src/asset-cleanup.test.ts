@@ -522,7 +522,7 @@ describe("cleanupAssets", () => {
 
     // deleteDockerImages should be called with unreferenced hash
     expect(mockedDeleteDockerImages).toHaveBeenCalledTimes(1);
-    expect(mockedDeleteDockerImages).toHaveBeenCalledWith([unusedHash], false);
+    expect(mockedDeleteDockerImages).toHaveBeenCalledWith([unusedHash], false, undefined);
   });
 
   it("should show Docker images in dry-run mode", async () => {
@@ -550,7 +550,7 @@ describe("cleanupAssets", () => {
     expect(await fileExists(`asset.${dockerHash}`)).toBe(true);
 
     // deleteDockerImages should be called with dryRun=true
-    expect(mockedDeleteDockerImages).toHaveBeenCalledWith([dockerHash], true);
+    expect(mockedDeleteDockerImages).toHaveBeenCalledWith([dockerHash], true, undefined);
   });
 
   it("should not call deleteDockerImages for non-Docker assets", async () => {
@@ -659,5 +659,61 @@ describe("cleanupAssets", () => {
 
     // Unreferenced asset with broken symlink should be deleted
     expect(await fileExists("asset.with-broken-symlink")).toBe(false);
+  });
+
+  it("should show verbose output when verbose flag is enabled", async () => {
+    await createTestManifest();
+
+    // Create some test assets
+    await createTestFile("asset.unused1/file.txt", "test content");
+    await createTestFile("asset.unused2/file.txt", "test content");
+    await createTestFile("asset.used/file.txt", "test content");
+
+    // Create assets.json that references asset.used
+    const assetsJson = {
+      version: "1.0",
+      files: {
+        file1: {
+          source: { path: "asset.used" },
+          destinations: {},
+        },
+      },
+    };
+    await createTestFile("test.assets.json", JSON.stringify(assetsJson));
+
+    // Capture console output
+    const consoleLogSpy = vi.spyOn(console, "log");
+
+    await cleanupAssets({ outdir: TEST_DIR, dryRun: true, keepHours: 0, verbose: true });
+
+    // Verify verbose messages are logged
+    const logOutput = consoleLogSpy.mock.calls.map((call) => call.join(" ")).join("\n");
+
+    expect(logOutput).toContain("Collecting referenced assets from *.assets.json files...");
+    expect(logOutput).toContain("Found 1 referenced asset(s)");
+    expect(logOutput).toContain("Found 3 total asset(s) in directory");
+    expect(logOutput).toContain("Analyzing assets for deletion candidates...");
+
+    consoleLogSpy.mockRestore();
+  });
+
+  it("should not show verbose output when verbose flag is disabled", async () => {
+    await createTestManifest();
+
+    // Create some test assets
+    await createTestFile("asset.unused1/file.txt", "test content");
+
+    // Capture console output
+    const consoleLogSpy = vi.spyOn(console, "log");
+
+    await cleanupAssets({ outdir: TEST_DIR, dryRun: true, keepHours: 0, verbose: false });
+
+    // Verify verbose messages are not logged
+    const logOutput = consoleLogSpy.mock.calls.map((call) => call.join(" ")).join("\n");
+
+    expect(logOutput).not.toContain("Collecting referenced assets from *.assets.json files...");
+    expect(logOutput).not.toContain("Analyzing assets for deletion candidates...");
+
+    consoleLogSpy.mockRestore();
   });
 });
