@@ -691,7 +691,9 @@ describe("cleanupAssets", () => {
 
     expect(logOutput).toContain("Collecting referenced assets from *.assets.json files...");
     expect(logOutput).toContain("Found 1 asset(s) referenced in *.assets.json files");
-    expect(logOutput).toContain('Found 3 total asset file(s)/directory(ies) (starting with "asset.")');
+    expect(logOutput).toContain(
+      'Found 3 total asset file(s)/directory(ies) (starting with "asset.")',
+    );
     expect(logOutput).toContain("Analyzing assets for deletion candidates...");
 
     consoleLogSpy.mockRestore();

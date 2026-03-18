@@ -52,7 +52,9 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
   const assetEntries = entries.filter((entry) => entry.startsWith("asset."));
 
   if (verbose) {
-    console.log(`Found ${assetEntries.length} total asset file(s)/directory(ies) (starting with "asset.")`);
+    console.log(
+      `Found ${assetEntries.length} total asset file(s)/directory(ies) (starting with "asset.")`,
+    );
   }
 
   // Collect all Docker image asset paths (both active and to-be-deleted)
