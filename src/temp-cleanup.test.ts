@@ -108,4 +108,127 @@ describe("cleanupTempDirectories", () => {
       os.tmpdir = originalTmpdir;
     }
   });
+
+  it("should correctly filter protected and unprotected directories", async () => {
+    const originalTmpdir = os.tmpdir;
+    os.tmpdir = () => TEST_TMPDIR;
+
+    try {
+      await createTempCdkDir("cdk-recent");
+      const oldDir = await createTempCdkDir("cdk-old");
+
+      // Set old directory to 10 hours ago
+      const tenHoursAgo = Date.now() - 10 * 60 * 60 * 1000;
+      await fs.utimes(oldDir, new Date(tenHoursAgo), new Date(tenHoursAgo));
+
+      await cleanupTempDirectories({ dryRun: false, keepHours: 5 });
+
+      // Recent directory should be protected by keepHours
+      expect(await dirExists("cdk-recent")).toBe(true);
+      // Old directory should be deleted
+      expect(await dirExists("cdk-old")).toBe(false);
+    } finally {
+      os.tmpdir = originalTmpdir;
+    }
+  });
+
+  it("should handle multiple directories with different ages", async () => {
+    const originalTmpdir = os.tmpdir;
+    os.tmpdir = () => TEST_TMPDIR;
+
+    try {
+      await createTempCdkDir("cdk-very-recent");
+      const recentDir = await createTempCdkDir("cdk-recent");
+      const oldDir = await createTempCdkDir("cdk-old");
+
+      // Set different ages
+      const twoHoursAgo = Date.now() - 2 * 60 * 60 * 1000;
+      const sixHoursAgo = Date.now() - 6 * 60 * 60 * 1000;
+
+      await fs.utimes(recentDir, new Date(twoHoursAgo), new Date(twoHoursAgo));
+      await fs.utimes(oldDir, new Date(sixHoursAgo), new Date(sixHoursAgo));
+
+      await cleanupTempDirectories({ dryRun: false, keepHours: 4 });
+
+      // Very recent and recent directories should be protected
+      expect(await dirExists("cdk-very-recent")).toBe(true);
+      expect(await dirExists("cdk-recent")).toBe(true);
+      // Old directory should be deleted
+      expect(await dirExists("cdk-old")).toBe(false);
+    } finally {
+      os.tmpdir = originalTmpdir;
+    }
+  });
+
+  it("should correctly map filtered results to deletion candidates", async () => {
+    const originalTmpdir = os.tmpdir;
+    os.tmpdir = () => TEST_TMPDIR;
+
+    try {
+      await createTempCdkDir("cdk-dir1");
+      await createTempCdkDir("cdk-dir2");
+      await createTempCdkDir("cdk-dir3");
+      const protectedDir = await createTempCdkDir("cdk-protected");
+
+      // Set protected directory to be recent
+      const oneHourAgo = Date.now() - 1 * 60 * 60 * 1000;
+      await fs.utimes(protectedDir, new Date(oneHourAgo), new Date(oneHourAgo));
+
+      // Set other directories to be old
+      const tenHoursAgo = Date.now() - 10 * 60 * 60 * 1000;
+      for (const name of ["cdk-dir1", "cdk-dir2", "cdk-dir3"]) {
+        const dirPath = path.join(TEST_TMPDIR, name);
+        await fs.utimes(dirPath, new Date(tenHoursAgo), new Date(tenHoursAgo));
+      }
+
+      await cleanupTempDirectories({ dryRun: false, keepHours: 2 });
+
+      // Protected directory should exist
+      expect(await dirExists("cdk-protected")).toBe(true);
+      // Other directories should be deleted
+      expect(await dirExists("cdk-dir1")).toBe(false);
+      expect(await dirExists("cdk-dir2")).toBe(false);
+      expect(await dirExists("cdk-dir3")).toBe(false);
+    } finally {
+      os.tmpdir = originalTmpdir;
+    }
+  });
+
+  it("should handle empty directory list correctly", async () => {
+    const originalTmpdir = os.tmpdir;
+    os.tmpdir = () => TEST_TMPDIR;
+
+    try {
+      // No CDK directories created
+      await fs.mkdir(path.join(TEST_TMPDIR, "other-dir"), { recursive: true });
+
+      // Should not throw and complete successfully
+      await cleanupTempDirectories({ dryRun: false, keepHours: 0 });
+
+      expect(await dirExists("other-dir")).toBe(true);
+    } finally {
+      os.tmpdir = originalTmpdir;
+    }
+  });
+
+  it("should handle all directories being protected", async () => {
+    const originalTmpdir = os.tmpdir;
+    os.tmpdir = () => TEST_TMPDIR;
+
+    try {
+      await createTempCdkDir("cdk-dir1");
+      await createTempCdkDir("cdk-dir2");
+      await createTempCdkDir("cdk-dir3");
+
+      // All directories are recent (protected by keepHours)
+      await cleanupTempDirectories({ dryRun: false, keepHours: 24 });
+
+      // All directories should still exist
+      expect(await dirExists("cdk-dir1")).toBe(true);
+      expect(await dirExists("cdk-dir2")).toBe(true);
+      expect(await dirExists("cdk-dir3")).toBe(true);
+    } finally {
+      os.tmpdir = originalTmpdir;
+    }
+  });
 });
