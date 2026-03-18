@@ -50,7 +50,7 @@ console.log("   ✓ Added asset.old123/");
 
 // Step 5: Cleanup
 console.log("\n5. Running cleanup...");
-execSync(`node ${CLI} -o ${CDK_OUT}`, { stdio: "inherit" });
+execSync(`node ${CLI} -o ${CDK_OUT} -v`, { stdio: "inherit" });
 
 // Step 6: Verify old asset was removed
 console.log("\n6. Verifying old asset was removed...");

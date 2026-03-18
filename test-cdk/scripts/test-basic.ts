@@ -36,11 +36,11 @@ console.log("   ✓ Added asset.unused/ and user-file.txt");
 
 // Step 3: Dry run
 console.log("\n3. Running cdk-agc in dry-run mode...");
-execSync(`node ${CLI} -o ${CDK_OUT} -d`, { stdio: "inherit" });
+execSync(`node ${CLI} -o ${CDK_OUT} -d -v`, { stdio: "inherit" });
 
 // Step 4: Actual cleanup
 console.log("\n4. Running actual cleanup...");
-execSync(`node ${CLI} -o ${CDK_OUT}`, { stdio: "inherit" });
+execSync(`node ${CLI} -o ${CDK_OUT} -v`, { stdio: "inherit" });
 
 // Step 5: Verify
 console.log("\n5. Verifying cleanup...");

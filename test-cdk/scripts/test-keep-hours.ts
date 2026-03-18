@@ -35,7 +35,7 @@ console.log("   ✓ Added asset.recent123/");
 
 // Step 3: Cleanup with --keep-hours 1
 console.log("\n3. Running cleanup with --keep-hours 1...");
-execSync(`node ${CLI} -o ${CDK_OUT} -k 1`, { stdio: "inherit" });
+execSync(`node ${CLI} -o ${CDK_OUT} -k 1 -v`, { stdio: "inherit" });
 
 // Step 4: Verify recent asset still exists
 console.log("\n4. Verifying recent asset is protected...");
@@ -50,7 +50,7 @@ if (hasRecentAsset) {
 
 // Step 5: Cleanup without protection
 console.log("\n5. Running cleanup without --keep-hours...");
-execSync(`node ${CLI} -o ${CDK_OUT}`, { stdio: "inherit" });
+execSync(`node ${CLI} -o ${CDK_OUT} -v`, { stdio: "inherit" });
 
 // Step 6: Verify recent asset is now deleted
 console.log("\n6. Verifying recent asset is now deleted...");
