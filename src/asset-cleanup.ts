@@ -234,10 +234,7 @@ function displayProtectedItems(
 /**
  * Display items to be deleted
  */
-function displayItemsToDelete(
-  items: Array<{ path: string; size: number }>,
-  outdir: string,
-): void {
+function displayItemsToDelete(items: Array<{ path: string; size: number }>, outdir: string): void {
   for (const item of items) {
     const relativePath = path.relative(outdir, item.path);
     console.log(`  - ${relativePath} (${formatSize(item.size)})`);
