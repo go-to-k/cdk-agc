@@ -661,221 +661,223 @@ describe("cleanupAssets", () => {
     expect(await fileExists("asset.with-broken-symlink")).toBe(false);
   });
 
-  it("should show verbose output when verbose flag is enabled", async () => {
-    await createTestManifest();
+  describe("verbose mode and functional logic", () => {
+    it("should show verbose output when verbose flag is enabled", async () => {
+      await createTestManifest();
 
-    // Create some test assets
-    await createTestFile("asset.unused1/file.txt", "test content");
-    await createTestFile("asset.unused2/file.txt", "test content");
-    await createTestFile("asset.used/file.txt", "test content");
+      // Create some test assets
+      await createTestFile("asset.unused1/file.txt", "test content");
+      await createTestFile("asset.unused2/file.txt", "test content");
+      await createTestFile("asset.used/file.txt", "test content");
 
-    // Create assets.json that references asset.used
-    const assetsJson = {
-      version: "1.0",
-      files: {
-        file1: {
-          source: { path: "asset.used" },
-          destinations: {},
+      // Create assets.json that references asset.used
+      const assetsJson = {
+        version: "1.0",
+        files: {
+          file1: {
+            source: { path: "asset.used" },
+            destinations: {},
+          },
         },
-      },
-    };
-    await createTestFile("test.assets.json", JSON.stringify(assetsJson));
+      };
+      await createTestFile("test.assets.json", JSON.stringify(assetsJson));
 
-    // Capture console output
-    const consoleLogSpy = vi.spyOn(console, "log");
+      // Capture console output
+      const consoleLogSpy = vi.spyOn(console, "log");
 
-    await cleanupAssets({ outdir: TEST_DIR, dryRun: true, keepHours: 0, verbose: true });
+      await cleanupAssets({ outdir: TEST_DIR, dryRun: true, keepHours: 0, verbose: true });
 
-    // Verify verbose messages are logged
-    const logOutput = consoleLogSpy.mock.calls.map((call) => call.join(" ")).join("\n");
+      // Verify verbose messages are logged
+      const logOutput = consoleLogSpy.mock.calls.map((call) => call.join(" ")).join("\n");
 
-    expect(logOutput).toContain("Collecting referenced assets from *.assets.json files...");
-    expect(logOutput).toContain("Found 1 asset(s) referenced in *.assets.json files");
-    expect(logOutput).toContain(
-      'Found 3 total asset file(s)/directory(ies) (starting with "asset.")',
-    );
-    expect(logOutput).toContain("Analyzing assets for deletion candidates...");
+      expect(logOutput).toContain("Collecting referenced assets from *.assets.json files...");
+      expect(logOutput).toContain("Found 1 asset(s) referenced in *.assets.json files");
+      expect(logOutput).toContain(
+        'Found 3 total asset file(s)/directory(ies) (starting with "asset.")',
+      );
+      expect(logOutput).toContain("Analyzing assets for deletion candidates...");
 
-    consoleLogSpy.mockRestore();
-  });
+      consoleLogSpy.mockRestore();
+    });
 
-  it("should not show verbose output when verbose flag is disabled", async () => {
-    await createTestManifest();
+    it("should not show verbose output when verbose flag is disabled", async () => {
+      await createTestManifest();
 
-    // Create some test assets
-    await createTestFile("asset.unused1/file.txt", "test content");
+      // Create some test assets
+      await createTestFile("asset.unused1/file.txt", "test content");
 
-    // Capture console output
-    const consoleLogSpy = vi.spyOn(console, "log");
+      // Capture console output
+      const consoleLogSpy = vi.spyOn(console, "log");
 
-    await cleanupAssets({ outdir: TEST_DIR, dryRun: true, keepHours: 0, verbose: false });
+      await cleanupAssets({ outdir: TEST_DIR, dryRun: true, keepHours: 0, verbose: false });
 
-    // Verify verbose messages are not logged
-    const logOutput = consoleLogSpy.mock.calls.map((call) => call.join(" ")).join("\n");
+      // Verify verbose messages are not logged
+      const logOutput = consoleLogSpy.mock.calls.map((call) => call.join(" ")).join("\n");
 
-    expect(logOutput).not.toContain("Collecting referenced assets from *.assets.json files...");
-    expect(logOutput).not.toContain("Analyzing assets for deletion candidates...");
+      expect(logOutput).not.toContain("Collecting referenced assets from *.assets.json files...");
+      expect(logOutput).not.toContain("Analyzing assets for deletion candidates...");
 
-    consoleLogSpy.mockRestore();
-  });
+      consoleLogSpy.mockRestore();
+    });
 
-  it("should correctly filter protected and unprotected assets", async () => {
-    await createTestManifest();
+    it("should correctly filter protected and unprotected assets", async () => {
+      await createTestManifest();
 
-    // Create referenced asset (should be protected)
-    await createTestFile("asset.referenced/file.txt", "referenced");
+      // Create referenced asset (should be protected)
+      await createTestFile("asset.referenced/file.txt", "referenced");
 
-    // Create old unreferenced asset (should be deleted with keep-hours=0)
-    await createTestFile("asset.old/file.txt", "old");
+      // Create old unreferenced asset (should be deleted with keep-hours=0)
+      await createTestFile("asset.old/file.txt", "old");
 
-    // Reference one asset
-    const assetsJson = {
-      version: "1.0",
-      files: {
-        file1: {
-          source: { path: "asset.referenced" },
-          destinations: {},
+      // Reference one asset
+      const assetsJson = {
+        version: "1.0",
+        files: {
+          file1: {
+            source: { path: "asset.referenced" },
+            destinations: {},
+          },
         },
-      },
-    };
-    await createTestFile("test.assets.json", JSON.stringify(assetsJson));
+      };
+      await createTestFile("test.assets.json", JSON.stringify(assetsJson));
 
-    // Run cleanup with keep-hours=0 (only referenced assets protected)
-    await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 });
+      // Run cleanup with keep-hours=0 (only referenced assets protected)
+      await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 });
 
-    // Verify: referenced should exist, old should be deleted
-    expect(await fileExists("asset.referenced")).toBe(true);
-    expect(await fileExists("asset.old")).toBe(false);
-  });
+      // Verify: referenced should exist, old should be deleted
+      expect(await fileExists("asset.referenced")).toBe(true);
+      expect(await fileExists("asset.old")).toBe(false);
+    });
 
-  it("should handle multiple protection reasons correctly", async () => {
-    await createTestManifest();
+    it("should handle multiple protection reasons correctly", async () => {
+      await createTestManifest();
 
-    // Create asset that is both referenced AND recent
-    await createTestFile("asset.both/file.txt", "both protected");
+      // Create asset that is both referenced AND recent
+      await createTestFile("asset.both/file.txt", "both protected");
 
-    // Create asset that is only referenced
-    await createTestFile("asset.onlyref/file.txt", "only referenced");
+      // Create asset that is only referenced
+      await createTestFile("asset.onlyref/file.txt", "only referenced");
 
-    // Reference both assets
-    const assetsJson = {
-      version: "1.0",
-      files: {
-        file1: {
-          source: { path: "asset.both" },
-          destinations: {},
+      // Reference both assets
+      const assetsJson = {
+        version: "1.0",
+        files: {
+          file1: {
+            source: { path: "asset.both" },
+            destinations: {},
+          },
+          file2: {
+            source: { path: "asset.onlyref" },
+            destinations: {},
+          },
         },
-        file2: {
-          source: { path: "asset.onlyref" },
-          destinations: {},
+      };
+      await createTestFile("test.assets.json", JSON.stringify(assetsJson));
+
+      // Run with verbose to check protection reason
+      const consoleLogSpy = vi.spyOn(console, "log");
+
+      await cleanupAssets({ outdir: TEST_DIR, dryRun: true, keepHours: 24, verbose: true });
+
+      const logOutput = consoleLogSpy.mock.calls.map((call) => call.join(" ")).join("\n");
+
+      // Both should show "referenced in *.assets.json" as the reason
+      // (referenced takes precedence over recent in our implementation)
+      expect(logOutput).toContain("asset.both");
+      expect(logOutput).toContain("asset.onlyref");
+      expect(logOutput).toContain("referenced in *.assets.json");
+
+      // Both assets should still exist
+      expect(await fileExists("asset.both")).toBe(true);
+      expect(await fileExists("asset.onlyref")).toBe(true);
+
+      consoleLogSpy.mockRestore();
+    });
+
+    it("should correctly map filtered results to deletion candidates", async () => {
+      await createTestManifest();
+
+      // Create mix of assets
+      await createTestFile("asset.delete1/file.txt", "delete1");
+      await createTestFile("asset.delete2/file.txt", "delete2");
+      await createTestFile("asset.delete3/file.txt", "delete3");
+      await createTestFile("asset.protected/file.txt", "protected");
+
+      // Reference only one
+      const assetsJson = {
+        version: "1.0",
+        files: {
+          file1: {
+            source: { path: "asset.protected" },
+            destinations: {},
+          },
         },
-      },
-    };
-    await createTestFile("test.assets.json", JSON.stringify(assetsJson));
+      };
+      await createTestFile("test.assets.json", JSON.stringify(assetsJson));
 
-    // Run with verbose to check protection reason
-    const consoleLogSpy = vi.spyOn(console, "log");
+      await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 });
 
-    await cleanupAssets({ outdir: TEST_DIR, dryRun: true, keepHours: 24, verbose: true });
+      // Verify the filter/map worked correctly: 3 deleted, 1 protected
+      expect(await fileExists("asset.delete1")).toBe(false);
+      expect(await fileExists("asset.delete2")).toBe(false);
+      expect(await fileExists("asset.delete3")).toBe(false);
+      expect(await fileExists("asset.protected")).toBe(true);
+    });
 
-    const logOutput = consoleLogSpy.mock.calls.map((call) => call.join(" ")).join("\n");
+    it("should handle empty asset list correctly", async () => {
+      await createTestManifest();
 
-    // Both should show "referenced in *.assets.json" as the reason
-    // (referenced takes precedence over recent in our implementation)
-    expect(logOutput).toContain("asset.both");
-    expect(logOutput).toContain("asset.onlyref");
-    expect(logOutput).toContain("referenced in *.assets.json");
+      // No assets at all, just manifest
+      const consoleLogSpy = vi.spyOn(console, "log");
 
-    // Both assets should still exist
-    expect(await fileExists("asset.both")).toBe(true);
-    expect(await fileExists("asset.onlyref")).toBe(true);
+      await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0, verbose: true });
 
-    consoleLogSpy.mockRestore();
-  });
+      const logOutput = consoleLogSpy.mock.calls.map((call) => call.join(" ")).join("\n");
 
-  it("should correctly map filtered results to deletion candidates", async () => {
-    await createTestManifest();
+      // Should show 0 assets found
+      expect(logOutput).toContain("Found 0 total asset file(s)/directory(ies)");
+      expect(logOutput).toContain("No unused assets found");
 
-    // Create mix of assets
-    await createTestFile("asset.delete1/file.txt", "delete1");
-    await createTestFile("asset.delete2/file.txt", "delete2");
-    await createTestFile("asset.delete3/file.txt", "delete3");
-    await createTestFile("asset.protected/file.txt", "protected");
+      consoleLogSpy.mockRestore();
+    });
 
-    // Reference only one
-    const assetsJson = {
-      version: "1.0",
-      files: {
-        file1: {
-          source: { path: "asset.protected" },
-          destinations: {},
+    it("should handle all assets being protected", async () => {
+      await createTestManifest();
+
+      // Create only referenced assets
+      await createTestFile("asset.ref1/file.txt", "ref1");
+      await createTestFile("asset.ref2/file.txt", "ref2");
+
+      const assetsJson = {
+        version: "1.0",
+        files: {
+          file1: {
+            source: { path: "asset.ref1" },
+            destinations: {},
+          },
+          file2: {
+            source: { path: "asset.ref2" },
+            destinations: {},
+          },
         },
-      },
-    };
-    await createTestFile("test.assets.json", JSON.stringify(assetsJson));
+      };
+      await createTestFile("test.assets.json", JSON.stringify(assetsJson));
 
-    await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0 });
+      const consoleLogSpy = vi.spyOn(console, "log");
 
-    // Verify the filter/map worked correctly: 3 deleted, 1 protected
-    expect(await fileExists("asset.delete1")).toBe(false);
-    expect(await fileExists("asset.delete2")).toBe(false);
-    expect(await fileExists("asset.delete3")).toBe(false);
-    expect(await fileExists("asset.protected")).toBe(true);
-  });
+      await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0, verbose: true });
 
-  it("should handle empty asset list correctly", async () => {
-    await createTestManifest();
+      const logOutput = consoleLogSpy.mock.calls.map((call) => call.join(" ")).join("\n");
 
-    // No assets at all, just manifest
-    const consoleLogSpy = vi.spyOn(console, "log");
+      // Should show all protected, no unused assets
+      expect(logOutput).toContain("Protected assets:");
+      expect(logOutput).toContain("No unused assets found");
 
-    await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0, verbose: true });
+      // All should still exist
+      expect(await fileExists("asset.ref1")).toBe(true);
+      expect(await fileExists("asset.ref2")).toBe(true);
 
-    const logOutput = consoleLogSpy.mock.calls.map((call) => call.join(" ")).join("\n");
-
-    // Should show 0 assets found
-    expect(logOutput).toContain("Found 0 total asset file(s)/directory(ies)");
-    expect(logOutput).toContain("No unused assets found");
-
-    consoleLogSpy.mockRestore();
-  });
-
-  it("should handle all assets being protected", async () => {
-    await createTestManifest();
-
-    // Create only referenced assets
-    await createTestFile("asset.ref1/file.txt", "ref1");
-    await createTestFile("asset.ref2/file.txt", "ref2");
-
-    const assetsJson = {
-      version: "1.0",
-      files: {
-        file1: {
-          source: { path: "asset.ref1" },
-          destinations: {},
-        },
-        file2: {
-          source: { path: "asset.ref2" },
-          destinations: {},
-        },
-      },
-    };
-    await createTestFile("test.assets.json", JSON.stringify(assetsJson));
-
-    const consoleLogSpy = vi.spyOn(console, "log");
-
-    await cleanupAssets({ outdir: TEST_DIR, dryRun: false, keepHours: 0, verbose: true });
-
-    const logOutput = consoleLogSpy.mock.calls.map((call) => call.join(" ")).join("\n");
-
-    // Should show all protected, no unused assets
-    expect(logOutput).toContain("Protected assets:");
-    expect(logOutput).toContain("No unused assets found");
-
-    // All should still exist
-    expect(await fileExists("asset.ref1")).toBe(true);
-    expect(await fileExists("asset.ref2")).toBe(true);
-
-    consoleLogSpy.mockRestore();
+      consoleLogSpy.mockRestore();
+    });
   });
 });
