@@ -73,41 +73,15 @@ export async function cleanupTempDirectories(options: TempCleanupOptions): Promi
   const totalCleaned = dirsToDelete.length;
   const totalSize = dirsToDelete.reduce((sum, item) => sum + item.size, 0);
 
-  if (verbose && protectedDirs.length > 0) {
-    console.log("Protected directories:");
-    for (const item of protectedDirs) {
-      console.log(`  ⊘ ${path.basename(item.path)} - ${item.reason}`);
-    }
-    console.log("");
+  // Display verbose information
+  if (verbose) {
+    displayProtectedDirectories(protectedDirs);
+    displayDirectoriesToDelete(dirsToDelete);
   }
 
-  if (verbose && dirsToDelete.length > 0) {
-    console.log("Directories to delete:");
-    for (const item of dirsToDelete) {
-      console.log(`  ✓ ${path.basename(item.path)} (${formatSize(item.size)})`);
-    }
-    console.log("");
-  }
-
+  // Delete directories
   if (!dryRun && dirsToDelete.length > 0) {
-    if (verbose) {
-      console.log("Deleting directories:");
-    }
-    for (const item of dirsToDelete) {
-      try {
-        if (verbose) {
-          console.log(`  → Deleting ${path.basename(item.path)}...`);
-        }
-        await fs.rm(item.path, { recursive: true, force: true });
-      } catch (error) {
-        console.warn(
-          `Warning: Failed to delete ${item.path}: ${error instanceof Error ? error.message : String(error)}`,
-        );
-      }
-    }
-    if (verbose) {
-      console.log("");
-    }
+    await deleteDirectoriesWithProgress(dirsToDelete, verbose ?? false);
   }
 
   if (totalCleaned === 0) {
@@ -168,4 +142,63 @@ async function checkProtection(dirPath: string, keepHours: number): Promise<Prot
   }
 
   return { isProtected: false };
+}
+
+/**
+ * Display protected directories in verbose mode
+ */
+function displayProtectedDirectories(dirs: Array<{ path: string; reason: string }>): void {
+  if (dirs.length === 0) {
+    return;
+  }
+
+  console.log("Protected directories:");
+  for (const item of dirs) {
+    console.log(`  ⊘ ${path.basename(item.path)} - ${item.reason}`);
+  }
+  console.log("");
+}
+
+/**
+ * Display directories to be deleted in verbose mode
+ */
+function displayDirectoriesToDelete(dirs: Array<{ path: string; size: number }>): void {
+  if (dirs.length === 0) {
+    return;
+  }
+
+  console.log("Directories to delete:");
+  for (const item of dirs) {
+    console.log(`  ✓ ${path.basename(item.path)} (${formatSize(item.size)})`);
+  }
+  console.log("");
+}
+
+/**
+ * Delete directories with optional verbose progress output
+ */
+async function deleteDirectoriesWithProgress(
+  dirs: Array<{ path: string }>,
+  verbose: boolean,
+): Promise<void> {
+  if (verbose) {
+    console.log("Deleting directories:");
+  }
+
+  for (const item of dirs) {
+    try {
+      if (verbose) {
+        console.log(`  → Deleting ${path.basename(item.path)}...`);
+      }
+      await fs.rm(item.path, { recursive: true, force: true });
+    } catch (error) {
+      console.warn(
+        `Warning: Failed to delete ${item.path}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
+  if (verbose) {
+    console.log("");
+  }
 }

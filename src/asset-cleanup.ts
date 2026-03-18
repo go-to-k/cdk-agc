@@ -85,52 +85,32 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
     .filter((item) => !item.protection.isProtected)
     .map(({ path, size, isDockerImageAsset }) => ({ path, size, isDockerImageAsset }));
 
-  if (verbose && protectedItems.length > 0) {
-    console.log("Protected assets:");
-    for (const item of protectedItems) {
-      const relativePath = path.relative(outdir, item.path);
-      console.log(`  ⊘ ${relativePath} (${formatSize(item.size)}) - ${item.protection.reason}`);
-    }
-    console.log("");
+  // Display protected items if verbose
+  if (verbose) {
+    displayProtectedItems(protectedItems, outdir);
   }
 
-  // Display results
+  // Early return if nothing to delete
   if (itemsToDelete.length === 0) {
     console.log(`✓ No unused assets found.`);
     return;
   }
 
+  // Display items to delete and collect Docker image hashes
   console.log(`Found ${itemsToDelete.length} unused item(s):`);
+  displayItemsToDelete(itemsToDelete, outdir);
 
-  // Display items and collect Docker image hashes (from Docker image assets only)
   const dockerImageHashes = itemsToDelete
-    .map((item) => {
-      const relativePath = path.relative(outdir, item.path);
-      console.log(`  - ${relativePath} (${formatSize(item.size)})`);
-      // Extract hash only for Docker image assets
-      return item.isDockerImageAsset ? extractDockerImageHash(item.path) : null;
-    })
+    .filter((item) => item.isDockerImageAsset)
+    .map((item) => extractDockerImageHash(item.path))
     .filter((hash): hash is string => hash !== null);
 
   const totalSize = itemsToDelete.reduce((sum, item) => sum + item.size, 0);
   console.log(`\nTotal assets size to reclaim: ${formatSize(totalSize)}\n`);
 
+  // Delete assets
   if (!dryRun) {
-    if (verbose) {
-      console.log("Deleting assets:");
-    }
-    await Promise.all(
-      itemsToDelete.map(async (item) => {
-        if (verbose) {
-          const relativePath = path.relative(outdir, item.path);
-          console.log(`  → Deleting ${relativePath}...`);
-        }
-        await fs.rm(item.path, { recursive: true, force: true });
-      }),
-    );
-    if (verbose) {
-      console.log("");
-    }
+    await deleteAssetsWithProgress(itemsToDelete, outdir, verbose ?? false);
   }
 
   let dockerImageSize = 0;
@@ -230,4 +210,63 @@ async function checkProtection(
   }
 
   return { isProtected: false };
+}
+
+/**
+ * Display protected items in verbose mode
+ */
+function displayProtectedItems(
+  items: Array<{ path: string; size: number; protection: ProtectionResult }>,
+  outdir: string,
+): void {
+  if (items.length === 0) {
+    return;
+  }
+
+  console.log("Protected assets:");
+  for (const item of items) {
+    const relativePath = path.relative(outdir, item.path);
+    console.log(`  ⊘ ${relativePath} (${formatSize(item.size)}) - ${item.protection.reason}`);
+  }
+  console.log("");
+}
+
+/**
+ * Display items to be deleted
+ */
+function displayItemsToDelete(
+  items: Array<{ path: string; size: number }>,
+  outdir: string,
+): void {
+  for (const item of items) {
+    const relativePath = path.relative(outdir, item.path);
+    console.log(`  - ${relativePath} (${formatSize(item.size)})`);
+  }
+}
+
+/**
+ * Delete assets with optional verbose progress output
+ */
+async function deleteAssetsWithProgress(
+  items: Array<{ path: string }>,
+  outdir: string,
+  verbose: boolean,
+): Promise<void> {
+  if (verbose) {
+    console.log("Deleting assets:");
+  }
+
+  await Promise.all(
+    items.map(async (item) => {
+      if (verbose) {
+        const relativePath = path.relative(outdir, item.path);
+        console.log(`  → Deleting ${relativePath}...`);
+      }
+      await fs.rm(item.path, { recursive: true, force: true });
+    }),
+  );
+
+  if (verbose) {
+    console.log("");
+  }
 }
