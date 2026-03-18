@@ -1,4 +1,4 @@
-## [1.13.1](https://github.com/go-to-k/cdk-agc/compare/v1.13.0...v1.13.1) (2026-02-23)
+# [1.13.1](https://github.com/go-to-k/cdk-agc/compare/v1.13.0...v1.13.1) (2026-02-23)
 
 ### Bug Fixes
 
