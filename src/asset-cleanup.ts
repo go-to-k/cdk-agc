@@ -39,7 +39,7 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
   const activePaths = await collectAssetPaths(outdir);
 
   if (verbose) {
-    console.log(`Found ${activePaths.size} referenced asset(s)\n`);
+    console.log(`Found ${activePaths.size} asset(s) referenced in *.assets.json files\n`);
   }
 
   // Scan directory items
