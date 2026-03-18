@@ -14,6 +14,11 @@ export interface CleanupOptions {
   verbose?: boolean;
 }
 
+interface ProtectionResult {
+  isProtected: boolean;
+  reason?: string;
+}
+
 /**
  * Clean up cdk.out directory
  */
@@ -57,35 +62,32 @@ export async function cleanupAssets(options: CleanupOptions): Promise<void> {
     console.log("Analyzing assets for deletion candidates...\n");
   }
 
-  const protectedItems: Array<{ path: string; reason: string; size: number }> = [];
-  const itemsToDelete = (
-    await Promise.all(
-      assetEntries.map(async (entry) => {
-        const itemPath = path.join(outdir, entry);
+  const analysisResults = await Promise.all(
+    assetEntries.map(async (entry) => {
+      const itemPath = path.join(outdir, entry);
+      const protection = await checkProtection(itemPath, activePaths, keepHours);
+      const size = await calculateSize(itemPath);
+      const isDockerImageAsset = allDockerImageAssetPaths.has(itemPath);
 
-        const protectionReason = await getProtectionReason(itemPath, activePaths, keepHours);
-        if (protectionReason) {
-          if (verbose) {
-            const size = await calculateSize(itemPath);
-            protectedItems.push({ path: itemPath, reason: protectionReason, size });
-          }
-          return null;
-        }
-
-        const size = await calculateSize(itemPath);
-        const isDockerImageAsset = allDockerImageAssetPaths.has(itemPath);
-        return { path: itemPath, size, isDockerImageAsset };
-      }),
-    )
-  ).filter(
-    (item): item is { path: string; size: number; isDockerImageAsset: boolean } => item !== null,
+      return {
+        path: itemPath,
+        size,
+        isDockerImageAsset,
+        protection,
+      };
+    }),
   );
+
+  const protectedItems = analysisResults.filter((item) => item.protection.isProtected);
+  const itemsToDelete = analysisResults
+    .filter((item) => !item.protection.isProtected)
+    .map(({ path, size, isDockerImageAsset }) => ({ path, size, isDockerImageAsset }));
 
   if (verbose && protectedItems.length > 0) {
     console.log("Protected assets:");
     for (const item of protectedItems) {
       const relativePath = path.relative(outdir, item.path);
-      console.log(`  ⊘ ${relativePath} (${formatSize(item.size)}) - ${item.reason}`);
+      console.log(`  ⊘ ${relativePath} (${formatSize(item.size)}) - ${item.protection.reason}`);
     }
     console.log("");
   }
@@ -204,17 +206,16 @@ async function collectAssetPaths(dirPath: string): Promise<Set<string>> {
 }
 
 /**
- * Get the reason why a file/directory should be protected from deletion
- * Returns null if not protected
+ * Check if a file/directory should be protected from deletion
  */
-async function getProtectionReason(
+async function checkProtection(
   itemPath: string,
   activePaths: Set<string>,
   keepHours: number,
-): Promise<string | null> {
+): Promise<ProtectionResult> {
   // Protect assets referenced in *.assets.json files
   if (activePaths.has(itemPath)) {
-    return "referenced in *.assets.json";
+    return { isProtected: true, reason: "referenced in *.assets.json" };
   }
 
   // Protect files/directories within retention period
@@ -222,9 +223,9 @@ async function getProtectionReason(
     const stats = await fs.stat(itemPath);
     const ageHours = (Date.now() - stats.mtimeMs) / (1000 * 60 * 60);
     if (ageHours <= keepHours) {
-      return `modified within last ${keepHours} hour(s)`;
+      return { isProtected: true, reason: `modified within last ${keepHours} hour(s)` };
     }
   }
 
-  return null;
+  return { isProtected: false };
 }
