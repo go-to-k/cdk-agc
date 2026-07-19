@@ -7,8 +7,7 @@ export default defineConfig({
     trailingComma: "all",
   },
   lint: {
-    rules: {
-      typescript: "warn",
+    categories: {
       correctness: "warn",
       suspicious: "warn",
       perf: "warn",
