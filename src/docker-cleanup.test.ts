@@ -162,12 +162,12 @@ describe("deleteDockerImages", () => {
 
     // Mock: search all images with size
     const allImagesOutput = `cdkasset-${hash}:latest\t${imageId}\t269.4MB\n123456789012.dkr.ecr.us-east-1.amazonaws.com/cdk-hnb659fds-container-assets-123456789012-us-east-1:${hash}\t${imageId}\t269.4MB`;
-    mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
+    mockedExecSync.mockReturnValueOnce(allImagesOutput);
 
     // Mock: docker image rm for local tag
-    mockedExecSync.mockReturnValueOnce("" as any);
+    mockedExecSync.mockReturnValueOnce("");
     // Mock: docker image rm for ECR tag
-    mockedExecSync.mockReturnValueOnce("" as any);
+    mockedExecSync.mockReturnValueOnce("");
 
     await deleteDockerImages([hash], false);
 
@@ -180,10 +180,10 @@ describe("deleteDockerImages", () => {
 
     // Mock: search all images and find ECR format (no local format)
     const allImagesOutput = `123456789012.dkr.ecr.us-east-1.amazonaws.com/cdk-hnb659fds-container-assets-123456789012-us-east-1:${hash}\t${imageId}\t100MB\ncdkasset-other:latest\tabcd1234\t50MB`;
-    mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
+    mockedExecSync.mockReturnValueOnce(allImagesOutput);
 
     // Mock: docker image rm for ECR tag succeeds
-    mockedExecSync.mockReturnValueOnce("" as any);
+    mockedExecSync.mockReturnValueOnce("");
 
     await deleteDockerImages([hash], false);
 
@@ -195,7 +195,7 @@ describe("deleteDockerImages", () => {
 
     // Mock: no matching images in all images
     const allImagesOutput = `cdkasset-other:latest\tabcd1234\t50MB`;
-    mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
+    mockedExecSync.mockReturnValueOnce(allImagesOutput);
 
     await deleteDockerImages([hash], false);
 
@@ -209,7 +209,7 @@ describe("deleteDockerImages", () => {
     // Mock: search all images
     const localTag = `cdkasset-${hash}:latest`;
     const allImagesOutput = `${localTag}\t${imageId}\t100MB`;
-    mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
+    mockedExecSync.mockReturnValueOnce(allImagesOutput);
 
     await deleteDockerImages([hash], true);
 
@@ -226,7 +226,7 @@ describe("deleteDockerImages", () => {
 
     // Mock: search all images
     const allImagesOutput = `cdkasset-${hash}:latest\t${imageId}\t100MB`;
-    mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
+    mockedExecSync.mockReturnValueOnce(allImagesOutput);
 
     // Mock: docker image rm fails (e.g., image in use)
     mockedExecSync.mockImplementationOnce(() => {
@@ -258,7 +258,7 @@ describe("deleteDockerImages", () => {
 
     // Mock: search all images - has matching hash but not CDK-related (no cdkasset- or container-assets)
     const allImagesOutput = `my-custom-repo:${hash}\tabcd1234\t100MB\nother-repo/image:latest\tef567890\t50MB`;
-    mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
+    mockedExecSync.mockReturnValueOnce(allImagesOutput);
 
     await deleteDockerImages([hash], false);
 
@@ -272,10 +272,10 @@ describe("deleteDockerImages", () => {
 
     // Mock: search all images and find ECR URI with full format
     const allImagesOutput = `123456789012.dkr.ecr.us-east-1.amazonaws.com/cdk-hnb659fds-container-assets-123456789012-us-east-1:${hash}\t${imageId}\t150MB`;
-    mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
+    mockedExecSync.mockReturnValueOnce(allImagesOutput);
 
     // Mock: docker image rm succeeds
-    mockedExecSync.mockReturnValueOnce("" as any);
+    mockedExecSync.mockReturnValueOnce("");
 
     await deleteDockerImages([hash], false);
 
@@ -297,11 +297,11 @@ describe("deleteDockerImages", () => {
 
     // Mock: search all images once for both hashes
     const allImagesOutput = `cdkasset-${hash1}:latest\t${imageId1}\t100MB\ncdkasset-${hash2}:latest\t${imageId2}\t200MB`;
-    mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
+    mockedExecSync.mockReturnValueOnce(allImagesOutput);
 
     // Mock: docker image rm for both images
-    mockedExecSync.mockReturnValueOnce("" as any);
-    mockedExecSync.mockReturnValueOnce("" as any);
+    mockedExecSync.mockReturnValueOnce("");
+    mockedExecSync.mockReturnValueOnce("");
 
     await deleteDockerImages([hash1, hash2], false);
 
@@ -317,11 +317,11 @@ describe("deleteDockerImages", () => {
 
     // Mock: search all images - 100MB + 200MB = 300MB total
     const allImagesOutput = `cdkasset-${hash1}:latest\t${imageId1}\t100MB\ncdkasset-${hash2}:latest\t${imageId2}\t200MB`;
-    mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
+    mockedExecSync.mockReturnValueOnce(allImagesOutput);
 
     // Mock: docker image rm for both images
-    mockedExecSync.mockReturnValueOnce("" as any);
-    mockedExecSync.mockReturnValueOnce("" as any);
+    mockedExecSync.mockReturnValueOnce("");
+    mockedExecSync.mockReturnValueOnce("");
 
     const totalSize = await deleteDockerImages([hash1, hash2], false);
 
@@ -334,7 +334,7 @@ describe("deleteDockerImages", () => {
 
     // Mock: no matching images
     const allImagesOutput = `other-image:latest\tabcd1234\t50MB`;
-    mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
+    mockedExecSync.mockReturnValueOnce(allImagesOutput);
 
     const totalSize = await deleteDockerImages([hash], false);
 
@@ -366,7 +366,7 @@ describe("deleteDockerImages", () => {
 
     // Mock: search all images - 269.4MB
     const allImagesOutput = `cdkasset-${hash}:latest\t${imageId}\t269.4MB`;
-    mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
+    mockedExecSync.mockReturnValueOnce(allImagesOutput);
 
     const totalSize = await deleteDockerImages([hash], true);
 
@@ -392,9 +392,9 @@ describe("deleteDockerImages", () => {
 
       // Mock: search all images
       const allImagesOutput = `cdkasset-${hash}:latest\t${imageId}\t100MB`;
-      mockedExecSync.mockReturnValueOnce(allImagesOutput as any);
+      mockedExecSync.mockReturnValueOnce(allImagesOutput);
       // Mock: image rm
-      mockedExecSync.mockReturnValueOnce("" as any);
+      mockedExecSync.mockReturnValueOnce("");
 
       await deleteDockerImages([hash], false);
 
