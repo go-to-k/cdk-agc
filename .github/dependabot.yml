@@ -1,5 +1,8 @@
 # Dependabot version updates.
 #
+# Dependabot is this repo's ONLY dependency-update bot — the Renovate config
+# was removed once Dependabot was live, so nothing else opens bump PRs here.
+#
 # Commit-message prefixes are chosen against this repo's semantic-release
 # rules (.releaserc.json, default commit-analyzer): `chore(...)` / `ci(...)`
 # do NOT cut a release, which is deliberate — the runtime dep uses a caret
