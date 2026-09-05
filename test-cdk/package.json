@@ -12,7 +12,7 @@
     "test:keep-hours": "node --enable-source-maps scripts/test-keep-hours.ts"
   },
   "dependencies": {
-    "aws-cdk-lib": "^2.237.1",
+    "aws-cdk-lib": "^2.260.0",
     "constructs": "^10.4.5"
   },
   "devDependencies": {
