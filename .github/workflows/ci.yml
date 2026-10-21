@@ -15,7 +15,7 @@ jobs:
 
       - uses: voidzero-dev/setup-vp@v1
         with:
-          node-version: "24.14.0"
+          node-version: "24.22.1"
           cache: true
 
       - name: Install dependencies
@@ -37,3 +37,28 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           files: ./coverage/coverage-final.json
+
+  runtime-compat:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # The first row is the published floor (`package.json` `engines.node`,
+        # as major.minor). Quoted so YAML keeps the spelling verbatim.
+        node-version: ["22.12", "24"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: voidzero-dev/setup-vp@v1
+        with:
+          node-version: "24.22.1"
+          cache: true
+
+      - name: Install dependencies
+        run: vp install --frozen-lockfile
+
+      - name: Pack
+        run: vp pack
+
+      - name: Smoke the built CLI on Node ${{ matrix.node-version }}
+        run: vp env exec --node ${{ matrix.node-version }} node dist/cli.mjs --version

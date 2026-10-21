@@ -49,7 +49,7 @@ npm install -g cdk-agc
 
 ## Requirements
 
-- Node.js >= 20.0.0
+- Node.js >= 22.12.0 (Node.js 20 reached end of life on 2026-04-30)
 
 ## Usage
 
