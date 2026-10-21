@@ -33,7 +33,7 @@ export default defineConfig({
     root: "src",
     platform: "node",
     format: ["esm"],
-    target: "node20",
+    target: "node22",
     dts: true,
     clean: true,
     fixedExtension: true,
