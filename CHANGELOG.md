@@ -1,3 +1,13 @@
+# [2.0.0](https://github.com/go-to-k/cdk-agc/compare/v1.14.0...v2.0.0) (2026-10-21)
+
+### Features
+
+- require Node.js 22.12.0 or later and pin Node.js 24.22.1 ([#65](https://github.com/go-to-k/cdk-agc/issues/65)) ([813f589](https://github.com/go-to-k/cdk-agc/commit/813f589883f29819d8084bfc10e48bdb6e46b42f))
+
+### BREAKING CHANGES
+
+- Node.js 20 is no longer supported. cdk-agc now requires Node.js 22.12.0 or later. Node.js 20 reached end of life on 2026-04-30 and did not receive the October 2026 security releases.
+
 # [1.14.0](https://github.com/go-to-k/cdk-agc/compare/v1.13.1...v1.14.0) (2026-03-18)
 
 ### Features
