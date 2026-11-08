@@ -3,7 +3,7 @@ packages:
   - test-cdk
 
 overrides:
-  vite: npm:@voidzero-dev/vite-plus-core@^0.2.5
+  vite: npm:@voidzero-dev/vite-plus-core@^1.4.0
 
 allowBuilds:
   esbuild: true
