@@ -36,7 +36,7 @@
     "prepublishOnly": "vp pack"
   },
   "dependencies": {
-    "commander": "^12.1.0"
+    "commander": "^15.0.0"
   },
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",
